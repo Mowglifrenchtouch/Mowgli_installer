@@ -14,17 +14,6 @@ else
   exit 1
 fi
 
-# 🎨 Logo (affiché une seule fois)
-[[ "$DEBUG" -ne 1 ]] && clear
-cat <<'BANNER'
-    __  ___                    ___       ____           __        ____         
-   /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
-  / /|_/ / __ \ | /| / / __ `/ / /_____ / // __ \/ ___/ __/ __ `/ / / _ \/ ___/
- / /  / / /_/ / |/ |/ / /_/ / / /_____/ // / / (__  ) /_/ /_/ / / /  __/ /    
-/_/  /_/\____/|__/|__/\__, /_/_/     /___/_/ /_/____/\__/\__,_/_/_/\___/_/     
-                     /____/                                                  
-BANNER
-
 # 🌍 Langue
 LANG_SYS=$(locale | grep LANG= | cut -d= -f2)
 LANG_CODE="fr"
@@ -123,7 +112,15 @@ EOF
 
 # 🔁 Menu principal
 while true; do
-  [[ "$DEBUG" -ne 1 ]] && clear
+  [[ "$DEBUG" -ne 1 ]] && clear && cat <<'BANNER'
+    __  ___                    ___       ____           __        ____         
+   /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
+  / /|_/ / __ \ | /| / / __ `/ / /_____ / // __ \/ ___/ __/ __ `/ / / _ \/ ___/
+ / /  / / /_/ / |/ |/ / /_/ / / /_____/ // / / (__  ) /_/ /_/ / / /  __/ /    
+/_/  /_/\____/|__/|__/\__, /_/_/     /___/_/ /_/____/\__/\__,_/_/_/\___/_/     
+                     /____/                                                  
+BANNER
+
   NOW=$(date "+%d/%m/%Y %H:%M:%S")
 
   echo "===== ÉTAT DES MODULES ====="
@@ -142,7 +139,7 @@ while true; do
   print_module_status F "MàJ firmware robot"          "st-flash"
   echo
 
-  # Infos système
+  # ℹ️ Infos système
   HOSTNAME=$(hostname)
   IP=$(hostname -I | awk '{print $1}')
   MAC=$(ip link show eth0 | awk '/ether/ {print $2}')
