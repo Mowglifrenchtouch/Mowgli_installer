@@ -1,10 +1,9 @@
 #!/bin/bash
 # install-mowgli.sh : Script d'installation pour OpenMower Mowgli (mode terminal)
 
-# Définir le dossier du script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 🎨 Logo Mowgli
+# 🎨 Logo
 cat <<'BANNER'
     __  ___                    ___       ____           __        ____         
    /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
@@ -14,31 +13,37 @@ cat <<'BANNER'
                      /____/                                                  
 BANNER
 
-# 🔍 Vérification des modules dans ./functions
-verifier_modules_functions() {
-  local ok=0
-  local fail=0
-  echo "🔍 Vérification des modules dans ./functions/"
-  for f in "$SCRIPT_DIR/functions/"*.sh; do
-    mod=$(basename "$f" .sh)
-    func_name="${mod,,}"
-    if grep -q "^[[:space:]]*${func_name}()" "$f"; then
-      echo "[OK]  $mod → fonction '$func_name' détectée"
-      ((ok++))
-    else
-      echo "[ERREUR] $mod → ⚠️  fonction '$func_name' non trouvée dans le fichier"
-      ((fail++))
-    fi
-  done
-  echo "✅ Total chargés : $ok   ❌ Manquants : $fail"
-  echo
-}
+# 🌍 Langue
+LANG_SYS=$(locale | grep LANG= | cut -d= -f2)
+LANG_CODE="fr"
+[[ "$LANG_SYS" =~ en ]] && LANG_CODE="en"
+LANG_FILE="$SCRIPT_DIR/lang/${LANG_CODE}.sh"
+if [ -f "$LANG_FILE" ]; then
+  source "$LANG_FILE"
+else
+  echo "[WARN] Fichier de langue introuvable : $LANG_FILE. Fallback en français."
+  source "$SCRIPT_DIR/lang/fr.sh"
+fi
 
-# === Suivi des modules dynamiques ===
+# ✅ Variables
+DEBUG=${DEBUG:-0}
 STATUS_FILE="$SCRIPT_DIR/install-status.conf"
+CONFIG_FILE="/boot/firmware/config.txt"
+BACKUP_SUFFIX=".bak"
+ENV_FILE=".env"
 
+# 🔐 Pas de sudo
+if [ "$EUID" -eq 0 ]; then
+  echo "Ce script ne doit pas être exécuté avec sudo."
+  echo "Lancez-le sans sudo : ./install-mowgli.sh"
+  exit 1
+fi
+
+set -e
+
+# ✅ Init statut
 if [ ! -f "$STATUS_FILE" ]; then
-  cat > "$STATUS_FILE" <<EOF
+cat > "$STATUS_FILE" <<EOF
 I=pending
 U=pending
 J=pending
@@ -55,6 +60,37 @@ Z=pending
 F=pending
 EOF
 fi
+
+# 🧩 Fonctions de statut
+print_module_status() {
+  local code="$1"
+  local label="$2"
+  local description="$3"
+  local value
+  value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
+  case "$value" in
+    done)   printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$description" ;;
+    manual) printf "[❗] %s) %-30s -> NON idempotent\n" "$code" "$label" ;;
+    *)      printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
+  esac
+}
+
+marquer_module_fait() {
+  local code="$1"
+  sed -i "s/^$code=.*/$code=done/" "$STATUS_FILE" 2>/dev/null || echo "$code=done" >> "$STATUS_FILE"
+}
+
+wrap_and_mark_done() {
+  local code="$1"
+  shift
+  local command="$@"
+  if eval "$command"; then
+    marquer_module_fait "$code"
+  else
+    echo "[ERREUR] La commande a échoué → $command"
+    pause_ou_touche
+  fi
+}
 
 reset_statuts_modules() {
   echo "⚠️  Cette action va réinitialiser tous les statuts des modules."
@@ -83,63 +119,7 @@ EOF
   pause_ou_touche
 }
 
-print_module_status() {
-  local code="$1"
-  local label="$2"
-  local description="$3"
-  local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
-  case "$value" in
-    done)   printf "[OK]  %s) %-30s -> %s\n" "$code" "$label" "$description" ;;
-    manual) printf "[!!] %s) %-30s -> NON idempotent\n" "$code" "$label" ;;
-    *)      printf "[--] %s) %-30s -> à faire\n" "$code" "$label" ;;
-  esac
-}
-
-marquer_module_fait() {
-  local code="$1"
-  sed -i "s/^$code=.*/$code=done/" "$STATUS_FILE" 2>/dev/null || echo "$code=done" >> "$STATUS_FILE"
-}
-
-wrap_and_mark_done() {
-  local code="$1"
-  shift
-  local command="$@"
-  
-  if eval "$command"; then
-    marquer_module_fait "$code"
-  else
-    echo "[ERREUR] La commande a échoué → $command"
-    pause_ou_touche
-  fi
-}
-
-# Détection de la langue
-LANG_SYS=$(locale | grep LANG= | cut -d= -f2)
-LANG_CODE="fr"
-[[ "$LANG_SYS" =~ en ]] && LANG_CODE="en"
-
-LANG_FILE="$SCRIPT_DIR/lang/${LANG_CODE}.sh"
-if [ -f "$LANG_FILE" ]; then
-  source "$LANG_FILE"
-else
-  echo "[WARN] Fichier de langue introuvable : $LANG_FILE. Fallback en français."
-  source "$SCRIPT_DIR/lang/fr.sh"
-fi
-
-DEBUG=${DEBUG:-0}
-if [ "$EUID" -eq 0 ]; then
-  echo "Ce script ne doit pas être exécuté avec sudo."
-  echo "Lancez-le sans sudo : ./install-mowgli.sh"
-  exit 1
-fi
-
-set -e
-
-CONFIG_FILE="/boot/firmware/config.txt"
-BACKUP_SUFFIX=".bak"
-ENV_FILE=".env"
-
-# Chargement des fonctions
+# 📦 Chargement des modules
 MODULE_DIR="$SCRIPT_DIR/functions"
 if [ -d "$MODULE_DIR" ]; then
   for module in "$MODULE_DIR"/*.sh; do
@@ -149,29 +129,45 @@ else
   echo "[WARN] Dossier modules introuvable: $MODULE_DIR"
 fi
 
+# 🔍 Vérification du nom des fonctions dans chaque fichier
+verifier_modules_functions() {
+  local ok=0 fail=0
+  for f in "$MODULE_DIR"/*.sh; do
+    mod=$(basename "$f" .sh)
+    func_name="${mod,,}"
+    if grep -q "^[[:space:]]*${func_name}()" "$f"; then
+      ((ok++))
+    else
+      echo "[ERREUR] $mod → fonction '$func_name' absente"
+      ((fail++))
+    fi
+  done
+}
 verifier_modules_functions
 
+# 🔁 Boucle principale
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear
   NOW=$(date "+%d/%m/%Y %H:%M:%S")
 
   echo "===== ÉTAT DES MODULES ====="
-  print_module_status I "Installation complète"         "OK"
-  print_module_status U "Mise à jour système"           "idempotent"
-  print_module_status J "Configuration UART"            "/boot/firmware/config.txt"
-  print_module_status T "Outils complémentaires"         "sélectif"
-  print_module_status D "Docker & Compose"              "idempotent"
-  print_module_status G "Configuration GPS"             "dtoverlay=uart4"
-  print_module_status C "Clonage mowgli-docker"         "git pull / clone"
-  print_module_status E "Génération .env"               ".env modifiable"
-  print_module_status O "Déploiement Docker"            "si compose actif"
-  print_module_status M "Suivi MQTT"                    "via mosquitto_sub"
-  print_module_status P "Personnalisation logo"         ""
-  print_module_status H "Mise à jour de l’installer"    "Git remote sync"
-  print_module_status Z "Désinstallation"               "reset + suppressions"
-  print_module_status F "Mise à jour firmware robot"    "comparaison + flash"
+  print_module_status I "Installation complète"       "globale"
+  print_module_status U "Mise à jour système"         "apt upgrade"
+  print_module_status J "Configuration UART"          "/boot/firmware/config.txt"
+  print_module_status T "Outils complémentaires"       "htop, lazydocker..."
+  print_module_status D "Docker & Compose"            "idempotent"
+  print_module_status G "Configuration GPS"           "dtoverlay=uart4"
+  print_module_status C "Clonage mowgli-docker"       "git clone/pull"
+  print_module_status E "Génération .env"             ".env modifiable"
+  print_module_status O "Déploiement Docker"          "docker compose"
+  print_module_status M "Suivi MQTT"                  "mosquitto_sub"
+  print_module_status P "Personnalisation logo"       "motd"
+  print_module_status H "Mise à jour de l’installer"  "via Git"
+  print_module_status Z "Désinstallation"             "reset + purge"
+  print_module_status F "MàJ firmware robot"          "st-flash"
   echo
 
+  # ℹ️ Infos système
   HOSTNAME=$(hostname)
   IP=$(hostname -I | awk '{print $1}')
   MAC=$(ip link show eth0 | awk '/ether/ {print $2}')
@@ -213,13 +209,13 @@ while true; do
   echo "T) Outils complémentaires"
   echo "D) Docker & Compose"
   echo "G) Configuration GPS"
-  echo "C) Clonage depot mowgli-docker"
-  echo "E) Generation .env"
-  echo "O) Deploiement conteneurs Docker"
+  echo "C) Clonage dépôt mowgli-docker"
+  echo "E) Génération .env"
+  echo "O) Déploiement conteneurs Docker"
   echo "M) Suivi MQTT robot_state"
-  echo "P) Personalisation logo"
-  echo "H) Mise a jour Mowgli installer"
-  echo "Z) Desinstallation et restauration"
+  echo "P) Personnalisation logo (motd)"
+  echo "H) Mise à jour de l’installer"
+  echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
   echo "R) Réinitialiser les statuts"
   echo "X) Quitter"
@@ -243,15 +239,10 @@ while true; do
     R|r) reset_statuts_modules ;;
     X|x)
       echo "À bientôt !"
-      read -p "Souhaitez-vous redémarrer le Raspberry Pi ? (y/N) : " reboot_choice
-      if [[ "$reboot_choice" =~ ^[Yy]$ ]]; then
-        echo "🔁 Redémarrage en cours..."
-        sudo reboot
-      else
-        exit 0
-      fi ;;
-    *) echo "[INFO] Retour au menu principal." ;;
+      read -p "$CONFIRM_REBOOT" reboot_choice
+      [[ "$reboot_choice" =~ ^[Yy]$ ]] && sudo reboot || exit 0 ;;
+    *) echo "[INFO] Option invalide." ;;
   esac
 
-  [[ "$DEBUG" -eq 1 ]] && echo -e "\n[DEBUG] Retour au menu principal.\n" || pause_ou_touche
+  [[ "$DEBUG" -eq 1 ]] && echo "[DEBUG] Retour au menu" || pause_ou_touche
 done
