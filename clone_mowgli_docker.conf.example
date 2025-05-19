@@ -9,7 +9,7 @@
 REPO_URL="https://github.com/cedbossneo/mowgli-docker.git"
 
 # 🌿 Branche Git à utiliser (par défaut : main)
-BRANCH="main"
+BRANCH="cedbossneo"
 
 # 📁 Répertoire de destination
 # Ce répertoire sera remplacé s’il existe déjà.
