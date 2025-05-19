@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF_FILE="$SCRIPT_DIR/clone_mowgli_docker.conf"
 
-# Chargement utilitaires (pause_ou_touche, ask_update_if_exists...)
+# Chargement utilitaires
 [ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
 
 clonage_depot_mowgli_docker() {
