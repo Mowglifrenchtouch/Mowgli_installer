@@ -213,7 +213,7 @@ BANNER
     X|x)
       echo "À bientôt !"
       read -p "$CONFIRM_REBOOT" reboot_choice
-      [[ "$reboot_choice" =~ ^[Yy]$ ]] && sudo reboot || exit 0 ;;
+      [[ "$reboot_choice" =~ ^[YyOo]$ ]] && sudo reboot || exit 0 ;;
     *) echo "[INFO] Option invalide." ;;
   esac
 
