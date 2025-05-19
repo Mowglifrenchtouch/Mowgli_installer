@@ -35,8 +35,8 @@ Script interactif pour installer et configurer tout l’environnement **OpenMowe
 ## 🚀 Installation
 
 ```bash
-git clone https://github.com/juditech3D/Mowgli_autoinstaller.git
-cd Mowgli_autoinstaller
+git clone https://github.com/Mowglifrenchtouch/Mowgli_installer.git
+cd Mowgli_installer
 chmod +x install-mowgli.sh
 ./install-mowgli.sh
 ```
