@@ -2,6 +2,9 @@
 # functions/mise_a_jour_firmware_robot.sh
 # Mise à jour du firmware du robot (via st-flash)
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
+
 mise_a_jour_firmware_robot() {
   echo "=== Mise à jour du firmware du robot ==="
 
@@ -9,6 +12,7 @@ mise_a_jour_firmware_robot() {
   local CONFIG_FILE="/opt/mowgli/firmware/version.txt"
   local SERVER="http://192.168.0.10/firmware"
   local TMP_FW
+  local REMOTE_VERSION CHANNEL URL
 
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "[ERREUR] Fichier de version introuvable : $CONFIG_FILE"
@@ -36,14 +40,14 @@ mise_a_jour_firmware_robot() {
 
   REMOTE_VERSION=$(curl -fs "$SERVER/$BOARD/$CHANNEL/latest.txt")
   if [ -z "$REMOTE_VERSION" ]; then
-    echo "[ERREUR] Impossible de récupérer la version distante pour $CHANNEL"
+    echo "[ERREUR] Impossible de récupérer la version distante pour le canal $CHANNEL."
     pause_ou_touche
     return 1
   fi
 
   echo "Version distante disponible : $REMOTE_VERSION"
 
-  if [ "$REMOTE_VERSION" == "$LOCAL_VERSION" ] && [ "$CHANNEL" == "$LOCAL_CHANNEL" ]; then
+  if [[ "$REMOTE_VERSION" == "$LOCAL_VERSION" && "$CHANNEL" == "$LOCAL_CHANNEL" ]]; then
     echo "✅ Le firmware est déjà à jour."
     pause_ou_touche
     return
@@ -56,10 +60,10 @@ mise_a_jour_firmware_robot() {
     return
   fi
 
-  URL="$SERVER/$BOARD/$CHANNEL/firmware_$REMOTE_VERSION.bin"
-  TMP_FW="firmware_$REMOTE_VERSION.bin"
+  URL="$SERVER/$BOARD/$CHANNEL/firmware_${REMOTE_VERSION}.bin"
+  TMP_FW="/tmp/firmware_${REMOTE_VERSION}.bin"
 
-  echo "⬇️  Téléchargement depuis $URL ..."
+  echo "⬇️  Téléchargement depuis : $URL"
   if ! curl -f -o "$TMP_FW" "$URL"; then
     echo "[ERREUR] Échec du téléchargement."
     pause_ou_touche
@@ -71,7 +75,7 @@ mise_a_jour_firmware_robot() {
     echo "$REMOTE_VERSION $CHANNEL" | sudo tee "$CONFIG_FILE" > /dev/null
     echo "✅ Firmware mis à jour vers $REMOTE_VERSION ($CHANNEL)."
   else
-    echo "❌ Flash échoué. Aucune modification appliquée."
+    echo "❌ Échec du flash. Le firmware n’a pas été modifié."
   fi
 
   rm -f "$TMP_FW"

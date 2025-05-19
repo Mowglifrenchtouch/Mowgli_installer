@@ -5,11 +5,11 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
 
-# Dossier backup
+# 📁 Dossier de sauvegarde
 BACKUP_DIR="$HOME/mowgli-installer/backups"
 mkdir -p "$BACKUP_DIR"
 
-# 💾 Fonction générique de sauvegarde (redondante si déjà définie dans utils.sh)
+# 💾 Fonction de sauvegarde locale (si pas déjà dans utils.sh)
 sauvegarder_fichier() {
   local fichier="$1"
   local base
@@ -22,7 +22,7 @@ sauvegarder_fichier() {
   fi
 }
 
-# ♻️ Restaurer la dernière sauvegarde de config.txt
+# ♻️ Restaurer config.txt
 restauration_uart() {
   local fichier="/boot/firmware/config.txt"
   local dernier
@@ -45,7 +45,7 @@ restauration_uart() {
   pause_ou_touche
 }
 
-# 🐳 Désinstaller Docker proprement
+# 🐳 Supprimer Docker
 desinstaller_docker() {
   echo "-> Suppression de Docker & Compose..."
   sudo apt purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -54,7 +54,7 @@ desinstaller_docker() {
   pause_ou_touche
 }
 
-# 🛠️ Désinstaller les outils complémentaires
+# 🛠️ Supprimer outils via complementary_tools.conf
 desinstaller_outils() {
   echo "-> Suppression des outils complémentaires..."
 
@@ -75,7 +75,7 @@ desinstaller_outils() {
   done < "$conf_file"
 
   if [[ "${#outils[@]}" -eq 0 ]]; then
-    echo "[INFO] Aucun outil trouvé à désinstaller."
+    echo "[INFO] Aucun outil à désinstaller."
   else
     sudo apt purge -y "${outils[@]}" 2>/dev/null
     echo "[OK] Outils désinstallés : ${outils[*]}"
@@ -84,35 +84,34 @@ desinstaller_outils() {
   pause_ou_touche
 }
 
-# 🧹 Supprimer le dossier mowgli-docker
+# 🧹 Supprimer dossier mowgli-docker
 supprimer_dossier_mowgli() {
   local dossier="$HOME/mowgli-docker"
   if [ -d "$dossier" ]; then
     rm -rf "$dossier"
-    echo "[OK] Dossier $dossier supprimé."
+    echo "[OK] Dossier supprimé : $dossier"
   else
-    echo "[INFO] Le dossier $dossier n'existe pas."
+    echo "[INFO] Aucun dossier trouvé à : $dossier"
   fi
   pause_ou_touche
 }
 
-# 🔥 Suppression complète
+# 🔥 Tout supprimer
 tout_supprimer() {
-  echo "⚠️  Suppression complète de tous les composants..."
-  read -p "Êtes-vous sûr ? Cela supprimera tout (o/N) : " confirm
+  echo "⚠️  Suppression complète de tous les composants liés à Mowgli"
+  read -p "Confirmez-vous la suppression totale ? (o/N) : " confirm
   if [[ "$confirm" =~ ^[Oo]$ ]]; then
     desinstaller_docker
     desinstaller_outils
     supprimer_dossier_mowgli
-    echo "[OK] Tous les composants ont été supprimés."
+    echo "[OK] Suppression complète effectuée."
   else
-    echo "[ANNULÉ] Rien n’a été supprimé."
+    echo "[ANNULÉ] Aucune action effectuée."
   fi
-
   pause_ou_touche
 }
 
-# 🧭 Sous-menu Z
+# 🧭 Menu Z : restauration & désinstallation
 desinstallation_restoration() {
   while true; do
     echo

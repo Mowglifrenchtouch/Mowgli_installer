@@ -1,8 +1,8 @@
 # update_installer.conf.example
-# Configuration pour la mise à jour automatique du script
+# Configuration pour la mise à jour automatique du Mowgli Installer
 
-# Dépôt Git à utiliser
+# 🔗 URL du dépôt Git contenant le script d'installation à jour
 REPO_URL="https://github.com/juditech3D/Mowgli_autoinstaller.git"
 
-# Branche par défaut
+# 🌿 Branche à utiliser (ex: main, develop...)
 BRANCH="main"

@@ -13,21 +13,21 @@ deploiement_conteneurs() {
 
   # Vérifie que Docker est bien installé
   if ! command -v docker >/dev/null 2>&1; then
-    echo "[ERREUR] Docker n'est pas installé. Lancez d'abord l'option D)."
+    echo "[ERREUR] Docker n'est pas installé. Veuillez exécuter l'option D) d'abord."
     pause_ou_touche
     return 1
   fi
 
-  # Vérifie que le dépôt est bien cloné
+  # Vérifie que le dossier cible existe
   if [ ! -d "$target_dir" ]; then
-    echo "[ERREUR] Le dossier $target_dir n'existe pas. Clonez le dépôt avec l'option C)."
+    echo "[ERREUR] Le dossier $target_dir n'existe pas. Utilisez l'option C) pour cloner le dépôt."
     pause_ou_touche
     return 1
   fi
 
   # Vérifie que le fichier docker-compose existe
   if [ ! -f "$compose_file" ]; then
-    echo "[ERREUR] Aucun fichier docker-compose.yml trouvé dans $target_dir"
+    echo "[ERREUR] Fichier docker-compose.yml introuvable dans $target_dir"
     pause_ou_touche
     return 1
   fi
@@ -37,28 +37,25 @@ deploiement_conteneurs() {
   active_containers=$(docker compose -f "$compose_file" ps -q | wc -l)
 
   if [ "$active_containers" -gt 0 ]; then
-    echo "✅ Les conteneurs sont déjà actifs."
-    if ! ask_update_if_exists "Souhaitez-vous forcer leur redémarrage ?"; then
+    echo "✅ Des conteneurs sont déjà actifs."
+    if ! ask_update_if_exists "Souhaitez-vous les redémarrer ?"; then
       echo "⏭️  Déploiement ignoré."
       pause_ou_touche
       return
     fi
   fi
 
+  # Sauvegarde
   sauvegarder_fichier "$compose_file"
 
-  cd "$target_dir" || return 1
+  echo "📦 Mise à jour des images (si besoin)..."
+  (cd "$target_dir" && docker compose pull)
 
-  echo "📦 Pull des images Docker (si nécessaire)..."
-  docker compose pull
+  echo "🚀 Lancement des conteneurs..."
+  (cd "$target_dir" && docker compose up -d)
 
-  echo "🚀 Démarrage des conteneurs en arrière-plan..."
-  docker compose up -d
-
-  echo "✅ Conteneurs en cours d’exécution :"
-  docker compose ps
-
-  cd - > /dev/null || return 0
+  echo "✅ Conteneurs actuellement en cours d’exécution :"
+  (cd "$target_dir" && docker compose ps)
 
   pause_ou_touche
 }

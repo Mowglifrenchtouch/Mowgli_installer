@@ -1,11 +1,16 @@
 # clone_mowgli_docker.conf.example
-# Fichier de configuration pour le clonage du dépôt mowgli-docker
+# =================================
+# Exemple de configuration pour le clonage du dépôt mowgli-docker
+# Copiez ce fichier en tant que clone_mowgli_docker.conf
+# puis éditez les valeurs ci-dessous si nécessaire.
 
-# URL du dépôt Git (modifie pour ton fork perso si besoin)
+# 🔗 URL du dépôt Git
+# Remplacez par votre fork si vous utilisez un dépôt personnalisé.
 REPO_URL="https://github.com/cedbossneo/mowgli-docker.git"
 
-# Branche à cloner (ex: main, master, develop…)
+# 🌿 Branche à cloner (ex : main, develop, custom-branch)
 BRANCH="main"
 
-# Dossier de destination du dépôt
-TARGET_DIR="$HOME/mowgli-docker"
+# 📁 Répertoire cible pour le clonage
+# Le dossier sera supprimé puis re-cloné si déjà présent.
+TARGET_DIR="${HOME}/mowgli-docker"

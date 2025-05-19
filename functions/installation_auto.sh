@@ -2,6 +2,9 @@
 # functions/installation_auto.sh
 # Lancement de l'installation complète, en mode local ou distant (ser2net)
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
+
 installation_auto() {
   echo "===== INSTALLATION COMPLÈTE ====="
   echo "Choisissez le type d'installation à effectuer :"
@@ -15,4 +18,6 @@ installation_auto() {
   else
     configuration_mode_distant
   fi
+
+  pause_ou_touche
 }

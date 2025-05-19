@@ -2,6 +2,9 @@
 # functions/installation_outils_complementaires.sh
 # Menu d'installation intelligente des outils CLI utiles
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
+
 installer_outils() {
   local conf_file="$SCRIPT_DIR/complementary_tools.conf"
   local -a outils noms installables

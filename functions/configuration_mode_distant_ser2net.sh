@@ -8,11 +8,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 configuration_mode_distant() {
   echo "=== Mode distant : communication via ser2net ==="
   echo
-  echo "[INFO] Ce mode est utilisé lorsque le robot transmet ses ports UART (IMU, GPS, etc.) à un serveur distant."
-  echo "[INFO] Les services ROS (ex : open_mower_ros) doivent tourner sur une machine distante (PC ou serveur)."
+  echo "[INFO] Ce mode est utilisé lorsque le robot transmet ses ports UART (IMU, GPS, etc.)"
+  echo "       à une machine distante (comme un serveur ou un PC hébergeant ROS)."
   echo
-
-  echo "📘 Tutoriel complet disponible ici :"
+  echo "📘 Tutoriel en ligne :"
   echo "🔗 https://juditech3d.github.io/Guide-DIY-OpenMower-Mowgli-pour-Robots-Tondeuses-Yard500-et-500B/ser2net/"
   echo
 
@@ -21,24 +20,47 @@ configuration_mode_distant() {
     echo "✅ Le service ser2net est actif."
   else
     echo "⚠️  Le service ser2net n'est pas actif ou non installé."
-    echo "ℹ️  Pour l'installer : sudo apt install ser2net"
+    echo "➡️  Pour l'installer : sudo apt install ser2net"
   fi
 
   echo
-  read -p "Souhaitez-vous consulter le contenu actuel de /etc/ser2net.conf ? (o/N) : " voir
+  read -p "Souhaitez-vous afficher le contenu de /etc/ser2net.conf ? (o/N) : " voir
   if [[ "$voir" =~ ^[Oo]$ ]]; then
     echo
     if [ -f /etc/ser2net.conf ]; then
-      echo "📄 Contenu de /etc/ser2net.conf :"
+      echo "📄 Contenu de /etc/ser2net.conf (hors commentaires) :"
       echo "----------------------------------------------------"
       grep -vE '^\s*#|^$' /etc/ser2net.conf
       echo "----------------------------------------------------"
     else
-      echo "❌ Fichier de configuration introuvable."
+      echo "❌ Fichier /etc/ser2net.conf introuvable."
     fi
   fi
 
   echo
-  echo "🛠️ Cette configuration doit être adaptée manuellement selon vos ports UART et besoins réseau."
+  read -p "Souhaitez-vous redémarrer le service ser2net maintenant ? (o/N) : " redem
+  if [[ "$redem" =~ ^[Oo]$ ]]; then
+    redemarrer_ser2net
+  fi
+
+  echo
+  echo "🛠️  Cette configuration doit être ajustée manuellement selon les ports UART exposés et les ports TCP souhaités."
   pause_ou_touche
+}
+
+redemarrer_ser2net() {
+  echo
+  echo "🔄 Redémarrage du service ser2net..."
+  sudo systemctl restart ser2net
+
+  echo "🔒 Activation automatique au démarrage..."
+  sudo systemctl enable ser2net
+
+  echo "🔍 Vérification du statut..."
+  if systemctl is-active --quiet ser2net; then
+    echo "✅ Le service ser2net fonctionne correctement."
+  else
+    echo "❌ Le service ser2net n'a pas pu démarrer correctement."
+    echo "🧪 Consultez les logs avec : journalctl -u ser2net -xe"
+  fi
 }

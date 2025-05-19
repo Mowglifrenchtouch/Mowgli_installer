@@ -9,3 +9,9 @@ pause_ou_touche() {
   echo
 }
 
+ask_update_if_exists() {
+  local message="$1"
+  echo -n "$message (y/N) : "
+  read -r answer
+  [[ "$answer" == "y" || "$answer" == "Y" ]]
+}

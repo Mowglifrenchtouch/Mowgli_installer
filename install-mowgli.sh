@@ -3,21 +3,16 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Chargement des fonctions
+# Chargement de toutes les fonctions
 MODULE_DIR="$SCRIPT_DIR/functions"
 if [ -d "$MODULE_DIR" ]; then
   for module in "$MODULE_DIR"/*.sh; do
     [ -r "$module" ] && source "$module"
   done
 else
-  echo "[WARN] Dossier modules introuvable: $MODULE_DIR"
+  echo "[ERREUR] Dossier functions introuvable : $MODULE_DIR"
+  exit 1
 fi
-
-# ✅ S'assurer que utils.sh est bien chargé
-[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
-
-
-
 
 # 🎨 Logo
 cat <<'BANNER'
@@ -41,7 +36,6 @@ else
   source "$SCRIPT_DIR/lang/fr.sh"
 fi
 
-# ✅ Variables
 DEBUG=${DEBUG:-0}
 STATUS_FILE="$SCRIPT_DIR/install-status.conf"
 CONFIG_FILE="/boot/firmware/config.txt"
@@ -57,7 +51,7 @@ fi
 
 set -e
 
-# ✅ Init statut
+# ✅ Init statuts (sans P)
 if [ ! -f "$STATUS_FILE" ]; then
 cat > "$STATUS_FILE" <<EOF
 I=pending
@@ -70,14 +64,12 @@ C=pending
 E=pending
 O=pending
 M=pending
-P=manual
 H=pending
 Z=pending
 F=pending
 EOF
 fi
 
-# 🧩 Fonctions de statut
 print_module_status() {
   local code="$1"
   local label="$2"
@@ -123,7 +115,6 @@ C=pending
 E=pending
 O=pending
 M=pending
-P=manual
 H=pending
 Z=pending
 F=pending
@@ -134,32 +125,6 @@ EOF
   fi
   pause_ou_touche
 }
-
-# 📦 Chargement des modules
-MODULE_DIR="$SCRIPT_DIR/functions"
-if [ -d "$MODULE_DIR" ]; then
-  for module in "$MODULE_DIR"/*.sh; do
-    [ -r "$module" ] && source "$module"
-  done
-else
-  echo "[WARN] Dossier modules introuvable: $MODULE_DIR"
-fi
-
-# 🔍 Vérification du nom des fonctions dans chaque fichier
-verifier_modules_functions() {
-  local ok=0 fail=0
-  for f in "$MODULE_DIR"/*.sh; do
-    mod=$(basename "$f" .sh)
-    func_name="${mod,,}"
-    if grep -q "^[[:space:]]*${func_name}()" "$f"; then
-      ((ok++))
-    else
-      echo "[ERREUR] $mod → fonction '$func_name' absente"
-      ((fail++))
-    fi
-  done
-}
-verifier_modules_functions
 
 # 🔁 Boucle principale
 while true; do
@@ -177,7 +142,6 @@ while true; do
   print_module_status E "Génération .env"             ".env modifiable"
   print_module_status O "Déploiement Docker"          "docker compose"
   print_module_status M "Suivi MQTT"                  "mosquitto_sub"
-  print_module_status P "Personnalisation logo"       "motd"
   print_module_status H "Mise à jour de l’installer"  "via Git"
   print_module_status Z "Désinstallation"             "reset + purge"
   print_module_status F "MàJ firmware robot"          "st-flash"
@@ -229,7 +193,6 @@ while true; do
   echo "E) Génération .env"
   echo "O) Déploiement conteneurs Docker"
   echo "M) Suivi MQTT robot_state"
-  echo "P) Personnalisation logo (motd)"
   echo "H) Mise à jour de l’installer"
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
@@ -248,7 +211,6 @@ while true; do
     E|e) wrap_and_mark_done E generation_env ;;
     O|o) wrap_and_mark_done O deploiement_conteneurs ;;
     M|m) wrap_and_mark_done M suivi_mqtt_robot_state ;;
-    P|p) personalisation_logo ;;  # volontairement non idempotent
     H|h) wrap_and_mark_done H mise_a_jour_installer ;;
     Z|z) wrap_and_mark_done Z desinstallation_restoration ;;
     F|f) wrap_and_mark_done F mise_a_jour_firmware_robot ;;
