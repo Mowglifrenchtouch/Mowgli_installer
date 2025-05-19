@@ -2,7 +2,7 @@
 # Configuration pour la mise à jour automatique du Mowgli Installer
 
 # 🔗 URL du dépôt Git contenant le script d'installation à jour
-REPO_URL="https://github.com/juditech3D/Mowgli_autoinstaller.git"
+REPO_URL="https://github.com/Mowglifrenchtouch/Mowgli_installer.git"
 
 # 🌿 Branche à utiliser (ex: main, develop...)
 BRANCH="main"
