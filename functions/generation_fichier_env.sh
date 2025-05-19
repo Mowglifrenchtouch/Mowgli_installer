@@ -38,17 +38,32 @@ generation_env() {
     sauvegarder_fichier "$env_file"
   fi
 
+  # Vérifie que l'interface wlan0 est active
+  if ! ip link show wlan0 | grep -q "state UP"; then
+    echo "❌ Le robot n’est pas connecté en WiFi (interface wlan0 inactive)."
+    echo "ℹ️  Veuillez connecter le Raspberry Pi en WiFi avant de continuer."
+    pause_ou_touche
+    return 1
+  fi
+
+  # Récupère l’IP WiFi
   local detected_ip
-  detected_ip=$(hostname -I | awk '{print $1}')
+  detected_ip=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+  if [ -z "$detected_ip" ]; then
+    echo "❌ Impossible de récupérer l’adresse IP WiFi du Raspberry Pi."
+    echo "ℹ️  Vérifiez que vous êtes bien connecté à un réseau via wlan0."
+    pause_ou_touche
+    return 1
+  fi
 
   read -p "Adresse IP de ROS (ROS_IP) [$detected_ip] : " ros_ip
   ros_ip=${ros_ip:-$detected_ip}
 
-  read -p "Adresse IP du robot (MOWER_IP) [192.168.1.200] : " mower_ip
-  mower_ip=${mower_ip:-192.168.1.200}
+  read -p "Adresse IP du robot (MOWER_IP) [$detected_ip] : " mower_ip
+  mower_ip=${mower_ip:-$detected_ip}
 
-  read -p "Adresse du broker MQTT (MQTT_BROKER) [localhost] : " mqtt_broker
-  mqtt_broker=${mqtt_broker:-localhost}
+  read -p "Adresse du broker MQTT (MQTT_BROKER) [$detected_ip] : " mqtt_broker
+  mqtt_broker=${mqtt_broker:-$detected_ip}
 
   sed -i "s/^ROS_IP=.*/ROS_IP=$ros_ip/" "$env_file" || echo "ROS_IP=$ros_ip" >> "$env_file"
   sed -i "s/^MOWER_IP=.*/MOWER_IP=$mower_ip/" "$env_file" || echo "MOWER_IP=$mower_ip" >> "$env_file"
