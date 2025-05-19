@@ -1,23 +1,24 @@
 #!/bin/bash
+# Language file: English 🇬🇧
 
-LABEL_MENU=(
-  "I) Full Installation"
-  "U) System Update"
-  "J) UART Configuration"
-  "T) Extra Tools"
-  "D) Docker & Compose"
-  "G) GPS Configuration"
-  "C) Clone mowgli-docker repo"
-  "E) Generate .env"
-  "O) Deploy Docker Containers"
-  "M) Monitor MQTT robot_state"
-  "P) Customize Boot Logo"
-  "H) Update Mowgli Installer"
-  "Z) Uninstall & Restore"
-  "F) Firmware Update (Robot)"
-  "X) Exit"
-)
+# — General messages —
+CONFIRM_REBOOT="Do you want to reboot the Raspberry Pi? (y/N): "
+RETOUR_MENU="[INFO] Returning to main menu..."
+REINITIALISATION_ANNULEE="⏭️  Reset cancelled."
+REINITIALISATION_OK="✅ All module statuses have been reset."
 
-PROMPT="Select> "
-MSG_INVALID="Invalid option."
-MSG_EXIT="Goodbye!"
+# — Module descriptions —
+MODULE_I_DESC="Full installation"
+MODULE_U_DESC="System update"
+MODULE_J_DESC="UART configuration"
+MODULE_T_DESC="Extra CLI tools"
+MODULE_D_DESC="Docker & Compose"
+MODULE_G_DESC="GPS configuration"
+MODULE_C_DESC="Clone mowgli-docker repo"
+MODULE_E_DESC=".env generation"
+MODULE_O_DESC="Deploy Docker containers"
+MODULE_M_DESC="MQTT topic monitor"
+MODULE_P_DESC="Logo customization (motd)"
+MODULE_H_DESC="Installer update"
+MODULE_Z_DESC="Uninstall & restore"
+MODULE_F_DESC="Firmware update"
