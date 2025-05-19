@@ -134,6 +134,7 @@ BANNER
   print_module_status E "Génération .env"             ".env modifiable"
   print_module_status O "Déploiement Docker"          "docker compose"
   print_module_status M "Suivi MQTT"                  "mosquitto_sub"
+  print_module_status S "Mode distant (ser2net)"      "UART → TCP (local → serveur)"
   print_module_status H "Mise à jour de l’installer"  "via Git"
   print_module_status Z "Désinstallation"             "reset + purge"
   print_module_status F "MàJ firmware robot"          "st-flash"
@@ -185,6 +186,7 @@ BANNER
   echo "E) Génération .env"
   echo "O) Déploiement conteneurs Docker"
   echo "M) Suivi MQTT robot_state"
+  echo "S) Mode distant (ser2net)"
   echo "H) Mise à jour de l’installer"
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
@@ -203,6 +205,7 @@ BANNER
     E|e) wrap_and_mark_done E generation_env ;;
     O|o) wrap_and_mark_done O deploiement_conteneurs ;;
     M|m) wrap_and_mark_done M suivi_mqtt_robot_state ;;
+    S|s) wrap_and_mark_done S configuration_mode_distant ;;
     H|h) wrap_and_mark_done H mise_a_jour_installer ;;
     Z|z) wrap_and_mark_done Z desinstallation_restoration ;;
     F|f) wrap_and_mark_done F mise_a_jour_firmware_robot ;;

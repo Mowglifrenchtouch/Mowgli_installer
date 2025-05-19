@@ -38,7 +38,37 @@ configuration_mode_distant() {
   fi
 
   echo
-  read -p "Souhaitez-vous redémarrer le service ser2net maintenant ? (o/N) : " redem
+  local compose_file="$HOME/mowgli-docker/docker-compose.ser2net.yaml"
+  if [ -f "$compose_file" ]; then
+    echo "📦 Fichier docker-compose.ser2net.yaml détecté."
+    read -p "Souhaitez-vous lancer le conteneur ser2net via Docker ? (o/N) : " docker_ser2net
+    if [[ "$docker_ser2net" =~ ^[Oo]$ ]]; then
+      echo
+      # Vérifie s'il y a déjà des conteneurs Docker actifs
+      active_containers=$(docker ps -q | wc -l)
+      if [ "$active_containers" -gt 0 ]; then
+        echo "⚠️  Des conteneurs Docker sont déjà en cours d'exécution."
+        echo "    Cela peut entrer en conflit avec ser2net."
+        read -p "Souhaitez-vous les arrêter avant de lancer ser2net ? (o/N) : " stop_docker
+        if [[ "$stop_docker" =~ ^[Oo]$ ]]; then
+          docker stop $(docker ps -q)
+          echo "🛑 Conteneurs arrêtés."
+        else
+          echo "⏭️  Lancement de ser2net sans interruption des conteneurs existants."
+        fi
+      fi
+
+      echo "🚀 Démarrage du conteneur ser2net..."
+      cd "$HOME/mowgli-docker" || return 1
+      docker compose -f docker-compose.ser2net.yaml up -d && echo "✅ Conteneur ser2net lancé."
+      cd - > /dev/null
+    fi
+  else
+    echo "ℹ️ Aucun fichier docker-compose.ser2net.yaml trouvé dans ~/mowgli-docker/"
+  fi
+
+  echo
+  read -p "Souhaitez-vous redémarrer le service ser2net système maintenant ? (o/N) : " redem
   if [[ "$redem" =~ ^[Oo]$ ]]; then
     redemarrer_ser2net
   fi
