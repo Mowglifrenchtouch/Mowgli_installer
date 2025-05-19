@@ -6,7 +6,7 @@ generation_env() {
   local env_file="$target_dir/.env"
   local example_file="$target_dir/.env.example"
 
-  echo "-> Génération / mise à jour du fichier .env"
+  echo "=== Génération / mise à jour du fichier .env ==="
 
   if [ ! -d "$target_dir" ]; then
     echo "[ERREUR] Le dossier $target_dir n'existe pas. Clonez-le d'abord avec l'option C)."
@@ -14,18 +14,23 @@ generation_env() {
     return 1
   fi
 
-  # Création depuis .env.example si nécessaire
-  if [ ! -f "$env_file" ] && [ -f "$example_file" ]; then
-    cp "$example_file" "$env_file"
-    echo "[OK] Fichier .env créé à partir de .env.example"
-  fi
-
-  if [ -f "$env_file" ]; then
-    sauvegarder_fichier "$env_file"
+  if [ ! -f "$env_file" ]; then
+    if [ -f "$example_file" ]; then
+      cp "$example_file" "$env_file"
+      echo "[OK] Fichier .env créé à partir de .env.example"
+    else
+      echo "[ERREUR] Aucun fichier .env ni .env.example trouvé."
+      pause_ou_touche
+      return 1
+    fi
   else
-    echo "[ERREUR] Aucun fichier .env trouvé ou généré."
-    pause_ou_touche
-    return 1
+    echo "✅ Fichier .env déjà présent dans $target_dir"
+    if ! ask_update_if_exists "Souhaitez-vous mettre à jour les variables ROS_IP / MOWER_IP / MQTT_BROKER ?"; then
+      echo "⏭️  Mise à jour ignorée."
+      pause_ou_touche
+      return
+    fi
+    sauvegarder_fichier "$env_file"
   fi
 
   # Détection automatique IP locale

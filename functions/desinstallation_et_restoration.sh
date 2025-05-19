@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUP_DIR="$HOME/mowgli-installer/backups"
 mkdir -p "$BACKUP_DIR"
 
-# Ì†ΩÌ¥ê Fonction g√©n√©rique de sauvegarde
+# üíæ Fonction g√©n√©rique de sauvegarde (redondante si d√©j√† d√©finie dans utils.sh)
 sauvegarder_fichier() {
   local fichier="$1"
   local base
@@ -22,7 +22,7 @@ sauvegarder_fichier() {
   fi
 }
 
-# ‚ôªÔ∏è Restaurer le dernier config.txt sauvegard√© (UART)
+# ‚ôªÔ∏è Restaurer la derni√®re sauvegarde de config.txt
 restauration_uart() {
   local fichier="/boot/firmware/config.txt"
   local dernier
@@ -45,7 +45,7 @@ restauration_uart() {
   pause_ou_touche
 }
 
-# Ì†ΩÌ∞≥ D√©sinstaller Docker proprement
+# üê≥ D√©sinstaller Docker proprement
 desinstaller_docker() {
   echo "-> Suppression de Docker & Compose..."
   sudo apt purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -54,7 +54,7 @@ desinstaller_docker() {
   pause_ou_touche
 }
 
-# Ì†ΩÌ¥ß D√©sinstaller outils install√©s via complementary_tools.conf
+# üõ†Ô∏è D√©sinstaller les outils compl√©mentaires
 desinstaller_outils() {
   echo "-> Suppression des outils compl√©mentaires..."
 
@@ -63,25 +63,28 @@ desinstaller_outils() {
 
   if [[ ! -f "$conf_file" ]]; then
     echo "[ERREUR] Fichier de configuration manquant : $conf_file"
+    pause_ou_touche
     return 1
   fi
 
   while IFS="|" read -r cmd _desc; do
     [[ "$cmd" =~ ^#.*$ || -z "$cmd" ]] && continue
-    outils+=("$cmd")
+    if command -v "$cmd" >/dev/null 2>&1; then
+      outils+=("$cmd")
+    fi
   done < "$conf_file"
 
   if [[ "${#outils[@]}" -eq 0 ]]; then
     echo "[INFO] Aucun outil trouv√© √† d√©sinstaller."
-    return 0
+  else
+    sudo apt purge -y "${outils[@]}" 2>/dev/null
+    echo "[OK] Outils d√©sinstall√©s : ${outils[*]}"
   fi
 
-  sudo apt purge -y "${outils[@]}" 2>/dev/null
-  echo "[OK] Outils d√©sinstall√©s."
   pause_ou_touche
 }
 
-# Ì†ΩÌ≥Å Supprimer le dossier mowgli-docker
+# üßπ Supprimer le dossier mowgli-docker
 supprimer_dossier_mowgli() {
   local dossier="$HOME/mowgli-docker"
   if [ -d "$dossier" ]; then
@@ -93,10 +96,10 @@ supprimer_dossier_mowgli() {
   pause_ou_touche
 }
 
-# ‚ö†Ô∏è Suppression compl√®te
+# üî• Suppression compl√®te
 tout_supprimer() {
-  echo "‚ö†Ô∏è Suppression compl√®te de tous les composants..."
-  read -p "√ätes-vous s√ªr ? Cela supprimera tout. (o/N) : " confirm
+  echo "‚ö†Ô∏è  Suppression compl√®te de tous les composants..."
+  read -p "√ätes-vous s√ªr ? Cela supprimera tout (o/N) : " confirm
   if [[ "$confirm" =~ ^[Oo]$ ]]; then
     desinstaller_docker
     desinstaller_outils
@@ -109,11 +112,11 @@ tout_supprimer() {
   pause_ou_touche
 }
 
-# Ì†ΩÌ≥ã Menu Z
+# üß≠ Sous-menu Z
 desinstallation_restoration() {
   while true; do
     echo
-    echo "Ì†ΩÌ≥ã Sous-menu Z) D√©sinstallation et restauration"
+    echo "üßØ Sous-menu Z) D√©sinstallation et restauration"
     echo "1) Restaurer configuration UART"
     echo "2) D√©sinstaller Docker & Compose"
     echo "3) D√©sinstaller outils compl√©mentaires"

@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF_FILE="$SCRIPT_DIR/clone_mowgli_docker.conf"
 
-# Chargement utilitaires (pause_ou_touche)
+# Chargement utilitaires
 [ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
 
 # Si le fichier de config n'existe pas, on le crée depuis l'exemple
@@ -21,7 +21,7 @@ sed -i 's/\r$//' "$CONF_FILE"
 source "$CONF_FILE"
 
 clonage_depot_mowgli_docker() {
-  echo "-> Clonage / mise à jour du dépôt ${REPO_URL}..."
+  echo "=== Clonage ou mise à jour du dépôt ${REPO_URL} (branche ${BRANCH}) ==="
 
   if ! command -v git >/dev/null 2>&1; then
     echo "Installation de git..."
@@ -29,15 +29,22 @@ clonage_depot_mowgli_docker() {
   fi
 
   if [ -d "$TARGET_DIR/.git" ]; then
-    git -C "$TARGET_DIR" fetch origin "$BRANCH" \
-      && git -C "$TARGET_DIR" reset --hard "origin/$BRANCH" \
-      || { echo "[ERREUR] Échec de mise à jour."; return 1; }
+    echo "✅ Le dépôt est déjà présent dans $TARGET_DIR"
+    if ask_update_if_exists "Souhaitez-vous mettre à jour ce dépôt (git fetch + reset) ?"; then
+      git -C "$TARGET_DIR" fetch origin "$BRANCH" \
+        && git -C "$TARGET_DIR" reset --hard "origin/$BRANCH" \
+        || { echo "[ERREUR] Échec de mise à jour."; return 1; }
+      echo "[OK] Dépôt mis à jour."
+    else
+      echo "⏭️  Mise à jour du dépôt ignorée."
+    fi
   else
+    echo "➡️ Clonage du dépôt dans $TARGET_DIR..."
     rm -rf "$TARGET_DIR"
     git clone --branch "$BRANCH" "$REPO_URL" "$TARGET_DIR" \
       || { echo "[ERREUR] Échec de clonage."; return 1; }
+    echo "[OK] Dépôt cloné dans $TARGET_DIR"
   fi
 
-  echo "[OK] Dépôt mis à jour dans $TARGET_DIR"
   pause_ou_touche
 }
