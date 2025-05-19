@@ -197,7 +197,7 @@ BANNER
     U|u) wrap_and_mark_done U mise_a_jour_systeme ;;
     J|j) wrap_and_mark_done J configuration_uart ;;
     T|t) wrap_and_mark_done T installer_outils ;;
-    D|d) wrap_and_mark_done D install_docker ;;
+    D|d) wrap_and_mark_done D installer_docker ;;
     G|g) wrap_and_mark_done G configuration_gps ;;
     C|c) wrap_and_mark_done C clonage_depot_mowgli_docker ;;
     E|e) wrap_and_mark_done E generation_env ;;
