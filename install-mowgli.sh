@@ -3,16 +3,20 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Chargement de toutes les fonctions
+# Chargement des fonctions
 MODULE_DIR="$SCRIPT_DIR/functions"
 if [ -d "$MODULE_DIR" ]; then
   for module in "$MODULE_DIR"/*.sh; do
     [ -r "$module" ] && source "$module"
   done
 else
-  echo "[ERREUR] Dossier functions introuvable : $MODULE_DIR"
-  exit 1
+  echo "[WARN] Dossier modules introuvable: $MODULE_DIR"
 fi
+
+# ✅ S'assurer que utils.sh est bien chargé
+[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
+
+
 
 
 # 🎨 Logo
