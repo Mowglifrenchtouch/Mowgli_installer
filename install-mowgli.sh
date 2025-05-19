@@ -1,30 +1,51 @@
 #!/bin/bash
 # install-mowgli.sh : Script d'installation pour OpenMower Mowgli (mode terminal)
 
-# === État des modules installés / validés ===
-# ✔️  installation_auto            → à faire (composite)
-# ✔️  mise_a_jour_systeme         → à idempotenter
-# ✔️  configuration_uart          → à faire (vérifier dans /boot/firmware/config.txt)
-# ✔️  installer_outils            → à faire (htop, lazydocker...)
-# ✔️  install_docker              → ✅ fait (idempotent + confirmation)
-# ✔️  configuration_gps           → à faire
-# ✔️  clonage_depot_mowgli_docker → à faire (git pull si déjà là ?)
-# ✔️  generation_env              → à faire (.env déjà présent ?)
-# ✔️  deploiement_conteneurs      → à faire (docker compose ps ?)
-# ✔️  suivi_mqtt_robot_state      → à faire (MQTT actif ?)
-# ✔️  personalisation_logo        → volontairement NON idempotent ✅
-# ✔️  mise_a_jour_installer       → déjà géré (git behind)
-# ✔️  desinstallation_restoration → à faire (backup + reset ?)
-# ✔️  mise_a_jour_firmware_robot  → optionnel (flash detecté ?)
-
-# Définir le dossier du script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Détection automatique de la langue (via fichiers en.sh / fr.sh à la racine)
+# === Suivi des modules dynamiques ===
+STATUS_FILE="$SCRIPT_DIR/install-status.conf"
+
+if [ ! -f "$STATUS_FILE" ]; then
+  cat > "$STATUS_FILE" <<EOF
+I=pending
+U=pending
+J=pending
+T=pending
+D=pending
+G=pending
+C=pending
+E=pending
+O=pending
+M=pending
+P=manual
+H=pending
+Z=pending
+F=pending
+EOF
+fi
+
+print_module_status() {
+  local code="$1"
+  local label="$2"
+  local description="$3"
+  local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
+  case "$value" in
+    done)   printf "[OK]  %s) %-30s -> %s\n" "$code" "$label" "$description" ;;
+    manual) printf "[!!] %s) %-30s -> NON idempotent\n" "$code" "$label" ;;
+    *)      printf "[--] %s) %-30s -> à faire\n" "$code" "$label" ;;
+  esac
+}
+
+marquer_module_fait() {
+  local code="$1"
+  sed -i "s/^$code=.*/$code=done/" "$STATUS_FILE" 2>/dev/null || echo "$code=done" >> "$STATUS_FILE"
+}
+
+# Détection de la langue
 LANG_SYS=$(locale | grep LANG= | cut -d= -f2)
 LANG_CODE="fr"
 [[ "$LANG_SYS" =~ en ]] && LANG_CODE="en"
-
 LANG_FILE="$SCRIPT_DIR/${LANG_CODE}.sh"
 if [ -f "$LANG_FILE" ]; then
   source "$LANG_FILE"
@@ -33,10 +54,7 @@ else
   source "$SCRIPT_DIR/fr.sh"
 fi
 
-# Option debug (ne pas effacer le terminal)
 DEBUG=${DEBUG:-0}
-
-# Ne pas exécuter avec sudo
 if [ "$EUID" -eq 0 ]; then
   echo "Ce script ne doit pas être exécuté avec sudo."
   echo "Lancez-le sans sudo : ./install-mowgli.sh"
@@ -45,64 +63,31 @@ fi
 
 set -e
 
-# Variables
 CONFIG_FILE="/boot/firmware/config.txt"
 BACKUP_SUFFIX=".bak"
 ENV_FILE=".env"
 
-# Fonctions de vérification idempotentes (extraits simplifiés)
-ask_update_if_exists() {
-  local message="$1"
-  echo -n "$message (y/N) : "
-  read -r answer
-  [[ "$answer" == "y" || "$answer" == "Y" ]]
-}
-
-check_docker_installed() {
-  if command -v docker &>/dev/null && docker compose version &>/dev/null; then
-    echo "✅ Docker et Docker Compose sont déjà installés."
-    ask_update_if_exists "Souhaitez-vous les mettre à jour ?"
-    return $? # 0 = update, 1 = skip
-  else
-    return 0 # pas installé → installer
-  fi
-}
-
-install_docker() {
-  if ! check_docker_installed; then
-    echo "⏭️  Installation Docker ignorée."
-    return
-  fi
-
-  echo "⚙️  Installation de Docker et Docker Compose..."
-  sudo apt-get update
-  sudo apt-get install -y docker.io docker-compose
-}
-
-# Boucle principale
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear
-
   NOW=$(date "+%d/%m/%Y %H:%M:%S")
 
   echo "===== ÉTAT DES MODULES ====="
-  echo "✔️  I) Installation complète         → à faire (composite)"
-  echo "✔️  U) Mise à jour système          → à idempotenter"
-  echo "✔️  J) Configuration UART           → à faire (/boot/firmware/config.txt)"
-  echo "✔️  T) Outils complémentaires        → à faire (htop, lazydocker...)"
-  echo "✅  D) Docker & Compose              → OK (idempotent)"
-  echo "✔️  G) Configuration GPS            → à faire"
-  echo "✔️  C) Clonage mowgli-docker        → à faire (déjà cloné ?)"
-  echo "✔️  E) Génération .env              → à faire (.env existant ?)"
-  echo "✔️  O) Déploiement Docker           → à faire (conteneurs actifs ?)"
-  echo "✔️  M) Suivi MQTT                   → à faire"
-  echo "❗  P) Personnalisation logo        → volontairement non idempotent"
-  echo "✔️  H) Mise à jour de l’installer   → déjà géré"
-  echo "✔️  Z) Désinstallation              → à faire (reset/restore)"
-  echo "✔️  F) Mise à jour firmware robot   → optionnel"
+  print_module_status I "Installation complète"         "OK"
+  print_module_status U "Mise à jour système"           "idempotent"
+  print_module_status J "Configuration UART"            "/boot/firmware/config.txt"
+  print_module_status T "Outils complémentaires"         "sélectif"
+  print_module_status D "Docker & Compose"              "idempotent"
+  print_module_status G "Configuration GPS"             "dtoverlay=uart4"
+  print_module_status C "Clonage mowgli-docker"         "git pull / clone"
+  print_module_status E "Génération .env"               ".env modifiable"
+  print_module_status O "Déploiement Docker"            "si compose actif"
+  print_module_status M "Suivi MQTT"                    "via mosquitto_sub"
+  print_module_status P "Personnalisation logo"         ""
+  print_module_status H "Mise à jour de l’installer"    "Git remote sync"
+  print_module_status Z "Désinstallation"               "reset + suppressions"
+  print_module_status F "Mise à jour firmware robot"    "comparaison + flash"
   echo
 
-  # Collecte infos système
   HOSTNAME=$(hostname)
   IP=$(hostname -I | awk '{print $1}')
   MAC=$(ip link show eth0 | awk '/ether/ {print $2}')
@@ -183,4 +168,5 @@ while true; do
   esac
 
   [[ "$DEBUG" -eq 1 ]] && echo -e "\n[DEBUG] Retour au menu principal.\n" || pause_ou_touche
+
 done
