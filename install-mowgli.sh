@@ -3,6 +3,18 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Chargement de toutes les fonctions
+MODULE_DIR="$SCRIPT_DIR/functions"
+if [ -d "$MODULE_DIR" ]; then
+  for module in "$MODULE_DIR"/*.sh; do
+    [ -r "$module" ] && source "$module"
+  done
+else
+  echo "[ERREUR] Dossier functions introuvable : $MODULE_DIR"
+  exit 1
+fi
+
+
 # 🎨 Logo
 cat <<'BANNER'
     __  ___                    ___       ____           __        ____         
