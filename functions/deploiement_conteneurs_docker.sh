@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 deploiement_conteneurs() {
   local target_dir="$HOME/mowgli-docker"
-  local compose_file="$target_dir/docker-compose.yml"
+  local compose_file="$target_dir/docker-compose.yaml"
 
   echo "=== Déploiement des conteneurs Docker ==="
 
@@ -27,7 +27,7 @@ deploiement_conteneurs() {
 
   # Vérifie que le fichier docker-compose existe
   if [ ! -f "$compose_file" ]; then
-    echo "[ERREUR] Fichier docker-compose.yml introuvable dans $target_dir"
+    echo "[ERREUR] Fichier docker-compose.yaml introuvable dans $target_dir"
     pause_ou_touche
     return 1
   fi
