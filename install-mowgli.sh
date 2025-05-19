@@ -1,7 +1,38 @@
 #!/bin/bash
 # install-mowgli.sh : Script d'installation pour OpenMower Mowgli (mode terminal)
 
+# Définir le dossier du script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 🎨 Logo Mowgli
+cat <<'BANNER'
+    __  ___                    ___       ____           __        ____         
+   /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
+  / /|_/ / __ \ | /| / / __ `/ / /_____ / // __ \/ ___/ __/ __ `/ / / _ \/ ___/
+ / /  / / /_/ / |/ |/ / /_/ / / /_____/ // / / (__  ) /_/ /_/ / / /  __/ /    
+/_/  /_/\____/|__/|__/\__, /_/_/     /___/_/ /_/____/\__/\__,_/_/_/\___/_/     
+                     /____/                                                  
+BANNER
+
+# 🔍 Vérification des modules dans ./functions
+verifier_modules_functions() {
+  local ok=0
+  local fail=0
+  echo "🔍 Vérification des modules dans ./functions/"
+  for f in "$SCRIPT_DIR/functions/"*.sh; do
+    mod=$(basename "$f" .sh)
+    func_name="${mod,,}"
+    if grep -q "^[[:space:]]*${func_name}()" "$f"; then
+      echo "[OK]  $mod → fonction '$func_name' détectée"
+      ((ok++))
+    else
+      echo "[ERREUR] $mod → ⚠️  fonction '$func_name' non trouvée dans le fichier"
+      ((fail++))
+    fi
+  done
+  echo "✅ Total chargés : $ok   ❌ Manquants : $fail"
+  echo
+}
 
 # === Suivi des modules dynamiques ===
 STATUS_FILE="$SCRIPT_DIR/install-status.conf"
@@ -25,6 +56,33 @@ F=pending
 EOF
 fi
 
+reset_statuts_modules() {
+  echo "⚠️  Cette action va réinitialiser tous les statuts des modules."
+  read -p "Êtes-vous sûr ? (o/N) : " confirm
+  if [[ "$confirm" =~ ^[Oo]$ ]]; then
+    cat > "$STATUS_FILE" <<EOF
+I=pending
+U=pending
+J=pending
+T=pending
+D=pending
+G=pending
+C=pending
+E=pending
+O=pending
+M=pending
+P=manual
+H=pending
+Z=pending
+F=pending
+EOF
+    echo "✅ Tous les modules ont été réinitialisés."
+  else
+    echo "⏭️  Réinitialisation annulée."
+  fi
+  pause_ou_touche
+}
+
 print_module_status() {
   local code="$1"
   local label="$2"
@@ -40,6 +98,19 @@ print_module_status() {
 marquer_module_fait() {
   local code="$1"
   sed -i "s/^$code=.*/$code=done/" "$STATUS_FILE" 2>/dev/null || echo "$code=done" >> "$STATUS_FILE"
+}
+
+wrap_and_mark_done() {
+  local code="$1"
+  shift
+  local command="$@"
+  
+  if eval "$command"; then
+    marquer_module_fait "$code"
+  else
+    echo "[ERREUR] La commande a échoué → $command"
+    pause_ou_touche
+  fi
 }
 
 # Détection de la langue
@@ -66,6 +137,18 @@ set -e
 CONFIG_FILE="/boot/firmware/config.txt"
 BACKUP_SUFFIX=".bak"
 ENV_FILE=".env"
+
+# Chargement des fonctions
+MODULE_DIR="$SCRIPT_DIR/functions"
+if [ -d "$MODULE_DIR" ]; then
+  for module in "$MODULE_DIR"/*.sh; do
+    [ -r "$module" ] && source "$module"
+  done
+else
+  echo "[WARN] Dossier modules introuvable: $MODULE_DIR"
+fi
+
+verifier_modules_functions
 
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear
@@ -137,24 +220,26 @@ while true; do
   echo "H) Mise a jour Mowgli installer"
   echo "Z) Desinstallation et restauration"
   echo "F) Mise à jour firmware robot"
+  echo "R) Réinitialiser les statuts"
   echo "X) Quitter"
 
   read -p "Choix> " choice
   case "$choice" in
     I|i) installation_auto ;;
-    U|u) mise_a_jour_systeme ;;
-    J|j) configuration_uart ;;
-    T|t) installer_outils ;;
-    D|d) install_docker ;;
-    G|g) configuration_gps ;;
-    C|c) clonage_depot_mowgli_docker ;;
-    E|e) generation_env ;;
-    O|o) deploiement_conteneurs ;;
-    M|m) suivi_mqtt_robot_state ;;
-    P|p) personalisation_logo ;;
-    H|h) mise_a_jour_installer ;;
-    Z|z) desinstallation_restoration ;;
-    F|f) mise_a_jour_firmware_robot ;;
+    U|u) wrap_and_mark_done U mise_a_jour_systeme ;;
+    J|j) wrap_and_mark_done J configuration_uart ;;
+    T|t) wrap_and_mark_done T installer_outils ;;
+    D|d) wrap_and_mark_done D install_docker ;;
+    G|g) wrap_and_mark_done G configuration_gps ;;
+    C|c) wrap_and_mark_done C clonage_depot_mowgli_docker ;;
+    E|e) wrap_and_mark_done E generation_env ;;
+    O|o) wrap_and_mark_done O deploiement_conteneurs ;;
+    M|m) wrap_and_mark_done M suivi_mqtt_robot_state ;;
+    P|p) personalisation_logo ;;  # volontairement non idempotent
+    H|h) wrap_and_mark_done H mise_a_jour_installer ;;
+    Z|z) wrap_and_mark_done Z desinstallation_restoration ;;
+    F|f) wrap_and_mark_done F mise_a_jour_firmware_robot ;;
+    R|r) reset_statuts_modules ;;
     X|x)
       echo "À bientôt !"
       read -p "Souhaitez-vous redémarrer le Raspberry Pi ? (y/N) : " reboot_choice
@@ -164,9 +249,8 @@ while true; do
       else
         exit 0
       fi ;;
-    *) echo "[ERREUR] Option invalide." ;;
+    *) echo "[INFO] Retour au menu principal." ;;
   esac
 
   [[ "$DEBUG" -eq 1 ]] && echo -e "\n[DEBUG] Retour au menu principal.\n" || pause_ou_touche
-
 done
