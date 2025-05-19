@@ -187,7 +187,7 @@ BANNER
   echo "O) Déploiement conteneurs Docker"
   echo "M) Suivi MQTT robot_state"
   echo "S) Mode distant (ser2net)"
-  echo "H) Mise à jour de l’installer"
+  echo "H) Mise à jour de Mowgli_installer"
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
   echo "R) Réinitialiser les statuts"
