@@ -11,16 +11,16 @@ TEMP_DIR="$HOME/.mowgli-installer-update"
 mise_a_jour_installer() {
   echo "=== Mise à jour du Mowgli Installer ==="
 
-  # Si fichier de config absent, créer un exemple
+  # Crée un fichier de config d'exemple si absent
   if [ ! -f "$CONFIG_FILE" ]; then
     cp "$SCRIPT_DIR/update_installer.conf.example" "$CONFIG_FILE"
-    echo "[WARN] Exemple de config créé à $CONFIG_FILE"
-    echo "       Modifiez ce fichier pour définir votre dépôt, puis relancez."
+    echo "[WARN] Exemple de config créé : $CONFIG_FILE"
+    echo "       Veuillez l’éditer pour définir le dépôt, puis relancez."
     pause_ou_touche
     return 1
   fi
 
-  # Nettoyage UTF-8 / CRLF
+  # Nettoyage BOM/CRLF
   sed -i '1 s/^\xEF\xBB\xBF//' "$CONFIG_FILE"
   sed -i 's/\r$//' "$CONFIG_FILE"
   source "$CONFIG_FILE"
@@ -34,16 +34,17 @@ mise_a_jour_installer() {
 
   echo "🔁 Dépôt      : $REPO_URL"
   echo "🔀 Branche    : $BRANCH"
-  echo "📁 Dossier    : $SCRIPT_DIR"
+  echo "📁 Répertoire : $SCRIPT_DIR"
   echo
 
-  # Vérifie si le dossier actuel est un dépôt Git
+  # Vérifie que le dossier actuel est bien un dépôt Git
   if [ ! -d "$SCRIPT_DIR/.git" ]; then
-    echo "[ERREUR] Le dossier $SCRIPT_DIR n’est pas un dépôt Git valide."
+    echo "[ERREUR] Ce répertoire n'est pas un dépôt Git valide."
     pause_ou_touche
     return 1
   fi
 
+  # Vérifie si une mise à jour est nécessaire
   git -C "$SCRIPT_DIR" fetch origin "$BRANCH"
   local behind
   behind=$(git -C "$SCRIPT_DIR" rev-list --count HEAD..origin/"$BRANCH")
@@ -54,7 +55,7 @@ mise_a_jour_installer() {
     return
   fi
 
-  echo "📦 $behind commit(s) disponibles sur la branche '$BRANCH'."
+  echo "📦 $behind mise(s) à jour disponible(s) sur '$BRANCH'."
 
   if ! ask_update_if_exists "Souhaitez-vous appliquer la mise à jour maintenant ?"; then
     echo "⏭️  Mise à jour annulée."
@@ -62,10 +63,10 @@ mise_a_jour_installer() {
     return
   fi
 
-  echo "⬇️ Clonage temporaire de la branche $BRANCH..."
+  echo "⬇️  Clonage temporaire de la branche '$BRANCH'..."
   rm -rf "$TEMP_DIR"
-  git clone --branch "$BRANCH" "$REPO_URL" "$TEMP_DIR" || {
-    echo "[ERREUR] Échec du clonage temporaire."
+  git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TEMP_DIR" || {
+    echo "[ERREUR] Échec du clonage du dépôt."
     pause_ou_touche
     return 1
   }
@@ -74,6 +75,6 @@ mise_a_jour_installer() {
   rsync -a --exclude='.git' "$TEMP_DIR/" "$SCRIPT_DIR/"
   rm -rf "$TEMP_DIR"
 
-  echo "✅ Mise à jour terminée depuis $REPO_URL ($BRANCH)."
+  echo "✅ Mowgli Installer mis à jour avec succès depuis $REPO_URL ($BRANCH)."
   pause_ou_touche
 }
