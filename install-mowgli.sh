@@ -117,12 +117,13 @@ wrap_and_mark_done() {
 LANG_SYS=$(locale | grep LANG= | cut -d= -f2)
 LANG_CODE="fr"
 [[ "$LANG_SYS" =~ en ]] && LANG_CODE="en"
-LANG_FILE="$SCRIPT_DIR/${LANG_CODE}.sh"
+
+LANG_FILE="$SCRIPT_DIR/lang/${LANG_CODE}.sh"
 if [ -f "$LANG_FILE" ]; then
   source "$LANG_FILE"
 else
   echo "[WARN] Fichier de langue introuvable : $LANG_FILE. Fallback en français."
-  source "$SCRIPT_DIR/fr.sh"
+  source "$SCRIPT_DIR/lang/fr.sh"
 fi
 
 DEBUG=${DEBUG:-0}
