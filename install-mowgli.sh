@@ -14,7 +14,8 @@ else
   exit 1
 fi
 
-# 🎨 Logo
+# 🎨 Logo (affiché une seule fois)
+[[ "$DEBUG" -ne 1 ]] && clear
 cat <<'BANNER'
     __  ___                    ___       ____           __        ____         
    /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
@@ -39,7 +40,6 @@ fi
 DEBUG=${DEBUG:-0}
 STATUS_FILE="$SCRIPT_DIR/install-status.conf"
 CONFIG_FILE="/boot/firmware/config.txt"
-BACKUP_SUFFIX=".bak"
 ENV_FILE=".env"
 
 # 🔐 Pas de sudo
@@ -51,7 +51,7 @@ fi
 
 set -e
 
-# ✅ Init statuts (sans P)
+# ✅ Statuts initiaux (sans P)
 if [ ! -f "$STATUS_FILE" ]; then
 cat > "$STATUS_FILE" <<EOF
 I=pending
@@ -71,14 +71,10 @@ EOF
 fi
 
 print_module_status() {
-  local code="$1"
-  local label="$2"
-  local description="$3"
-  local value
-  value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
+  local code="$1" label="$2" desc="$3"
+  local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
   case "$value" in
-    done)   printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$description" ;;
-    manual) printf "[❗] %s) %-30s -> NON idempotent\n" "$code" "$label" ;;
+    done)   printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$desc" ;;
     *)      printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
   esac
 }
@@ -89,8 +85,7 @@ marquer_module_fait() {
 }
 
 wrap_and_mark_done() {
-  local code="$1"
-  shift
+  local code="$1"; shift
   local command="$@"
   if eval "$command"; then
     marquer_module_fait "$code"
@@ -126,7 +121,7 @@ EOF
   pause_ou_touche
 }
 
-# 🔁 Boucle principale
+# 🔁 Menu principal
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear
   NOW=$(date "+%d/%m/%Y %H:%M:%S")
@@ -147,7 +142,7 @@ while true; do
   print_module_status F "MàJ firmware robot"          "st-flash"
   echo
 
-  # ℹ️ Infos système
+  # Infos système
   HOSTNAME=$(hostname)
   IP=$(hostname -I | awk '{print $1}')
   MAC=$(ip link show eth0 | awk '/ether/ {print $2}')
@@ -158,12 +153,12 @@ while true; do
   MEM=$(free -m | awk '/Mem/ {printf "%d MiB / %d MiB", $3, $2}')
   DISK=$(df -h / | awk 'END {print $4 " libres sur " $2}')
   UPDATE_COUNT=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
-  SYSTEM_STATUS=$([ "$UPDATE_COUNT" -eq 0 ] && echo "à jour" || echo "mises à jour disponibles")
+  SYSTEM_STATUS=$([ "$UPDATE_COUNT" -eq 0 ] && echo "à jour" || echo "mises à jour dispo")
 
   if [ -d "$SCRIPT_DIR/.git" ]; then
     git -C "$SCRIPT_DIR" remote update > /dev/null 2>&1
     behind=$(git -C "$SCRIPT_DIR" rev-list --count HEAD..origin/main)
-    INSTALLER_STATUS=$([ "$behind" -gt 0 ] && echo "mise à jour disponible (+${behind} commits)" || echo "à jour")
+    INSTALLER_STATUS=$([ "$behind" -gt 0 ] && echo "mise à jour dispo (+${behind} commits)" || echo "à jour")
   else
     INSTALLER_STATUS="non versionné"
   fi
