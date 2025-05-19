@@ -1,21 +1,38 @@
-# Fichiers de configuration sensibles
+# === Fichiers de configuration sensibles ===
 .env
+.env.*
 update_installer.conf
 clone_mowgli_docker.conf
+install-status.conf
 
-# Sauvegardes et données locales
+# === Sauvegardes et données locales ===
 backups/
 *.bak
 *.log
 *.tmp
 *.swp
+*.swo
 
-# Répertoire temporaire utilisé lors des mises à jour
+# === Répertoire temporaire pour les mises à jour ===
 .mowgli-installer-update/
 
-# Fichiers système
+# === Fichiers système (OS) ===
 .DS_Store
 Thumbs.db
 
-# Fichiers d'édition temporaire
+# === Fichiers d'édition temporaire ===
 *~
+# VSCode
+.vscode/
+
+# === Fichiers Python compilés ===
+__pycache__/
+*.pyc
+
+# === Archives ou dumps ===
+*.tar
+*.tar.gz
+*.zip
+
+# === Conteneurs & Docker spécifiques si générés localement ===
+*.pid
