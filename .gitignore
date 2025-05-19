@@ -1,0 +1,21 @@
+# Fichiers de configuration sensibles
+.env
+update_installer.conf
+clone_mowgli_docker.conf
+
+# Sauvegardes et données locales
+backups/
+*.bak
+*.log
+*.tmp
+*.swp
+
+# Répertoire temporaire utilisé lors des mises à jour
+.mowgli-installer-update/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers d'édition temporaire
+*~
