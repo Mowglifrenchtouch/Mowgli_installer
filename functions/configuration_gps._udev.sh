@@ -39,21 +39,33 @@ configuration_gps_udev() {
   echo "=== Détection GPS USB ==="
   echo "📡 Recherche des périphériques GPS USB via lsusb..."
 
-  lsusb | while read -r line; do
-    if echo "$line" | grep -Eiq "ublox|ch340|gps|rtk|cp210|ftdi"; then
-      id=$(echo "$line" | grep -oP 'ID \K[0-9a-f]{4}:[0-9a-f]{4}')
-      vendor_id="${id%%:*}"
-      product_id="${id##*:}"
-      rule="SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"$vendor_id\", ATTRS{idProduct}==\"$product_id\", SYMLINK+=\"gps\""
+  gps_found=0
+echo
 
-      if ! grep -q "$rule" "$udev_file" 2>/dev/null; then
-        echo "$rule" | sudo tee -a "$udev_file" > /dev/null
-        echo "✅ GPS détecté → règle ajoutée pour $vendor_id:$product_id"
-      else
-        echo "ℹ️  Règle GPS déjà présente pour $vendor_id:$product_id"
-      fi
+lsusb | while read -r line; do
+  if echo "$line" | grep -Eiq "ublox|ch340|gps|rtk|cp210|ftdi"; then
+    echo "🔍 Périphérique USB détecté : $line"
+    id=$(echo "$line" | grep -oP 'ID \K[0-9a-f]{4}:[0-9a-f]{4}')
+    vendor_id="${id%%:*}"
+    product_id="${id##*:}"
+    rule="SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"$vendor_id\", ATTRS{idProduct}==\"$product_id\", SYMLINK+=\"gps\""
+
+    if ! grep -q "$rule" "$udev_file" 2>/dev/null; then
+      echo "$rule" | sudo tee -a "$udev_file" > /dev/null
+      echo "✅ Règle UDEV ajoutée pour GPS ($vendor_id:$product_id)"
+    else
+      echo "ℹ️  Règle UDEV déjà existante pour GPS ($vendor_id:$product_id)"
     fi
-  done
+
+    gps_found=1
+  fi
+done
+
+if [ "$gps_found" -eq 0 ]; then
+  echo "❌ Aucun périphérique GPS connu détecté via lsusb."
+  echo "ℹ️  Branchez votre module GPS USB puis relancez cette option."
+fi
+
 
   echo
   echo "🔄 Redémarrage des règles UDEV..."

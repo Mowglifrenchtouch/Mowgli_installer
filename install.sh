@@ -19,14 +19,13 @@ if [ -d "$INSTALL_DIR" ]; then
 fi
 
 # Clone le dépôt
-git clone "$REPO_URL" "$INSTALL_DIR" || {
-  echo "❌ Erreur lors du clonage du dépôt."
+git clone https://github.com/Mowglifrenchtouch/Mowgli_installer.git "$INSTALL_DIR"
+
+# Change vers le répertoire du projet
+cd "$INSTALL_DIR" || {
+  echo "❌ Erreur : impossible d'accéder au dossier $INSTALL_DIR"
   exit 1
 }
 
-# Rends le script exécutable
-chmod +x "$INSTALL_DIR/install-mowgli.sh"
-
-# Lancer le script
-cd "$INSTALL_DIR" || exit 1
-./install-mowgli.sh
+# Lance le script principal
+exec ./install-mowgli.sh
