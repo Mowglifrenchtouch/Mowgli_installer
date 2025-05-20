@@ -18,7 +18,8 @@ ask_update_if_exists() {
 
 sauvegarder_fichier() {
   local fichier="$1"
-  local backup_dir="$HOME/Mowgli_installer/backups"
+  local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  local backup_dir="$script_dir/backups"
 
   if [ -f "$fichier" ]; then
     mkdir -p "$backup_dir"
@@ -30,6 +31,14 @@ sauvegarder_fichier() {
 
     cp "$fichier" "$dest"
     echo "[INFO] Sauvegarde créée : $dest"
+
+    # Supprimer les anciennes sauvegardes (ne conserver que les 2 plus récentes)
+    local count
+    count=$(ls -1 "$backup_dir"/${base}.*.bak 2>/dev/null | wc -l)
+    if [ "$count" -gt 2 ]; then
+      ls -1t "$backup_dir"/${base}.*.bak | tail -n +3 | xargs -r rm --
+      echo "[INFO] Anciennes sauvegardes supprimées (max 2 conservées)."
+    fi
   else
     echo "[WARN] Aucun fichier à sauvegarder : $fichier introuvable"
   fi
