@@ -9,6 +9,7 @@ generation_env() {
   local target_dir="$HOME/mowgli-docker"
   local env_file="$target_dir/.env"
   local example_file="$target_dir/.env.example"
+  local compose_file="$target_dir/docker-compose.yaml"
 
   echo "=== Génération / mise à jour du fichier .env ==="
 
@@ -71,6 +72,19 @@ generation_env() {
 
   echo "✅ Fichier .env mis à jour avec :"
   grep -E 'ROS_IP|MOWER_IP|MQTT_BROKER' "$env_file"
+
+  # Redémarrage auto si docker-compose est présent
+  if [ -f "$compose_file" ]; then
+    echo
+    echo "🔁 Le fichier docker-compose.yaml a été détecté."
+    if ask_update_if_exists "Souhaitez-vous redémarrer les conteneurs Docker pour appliquer les nouvelles variables ?"; then
+      cd "$target_dir" || return 1
+      docker compose down
+      docker compose up -d
+      cd - > /dev/null
+      echo "✅ Conteneurs redémarrés avec succès."
+    fi
+  fi
 
   pause_ou_touche
 }

@@ -15,3 +15,22 @@ ask_update_if_exists() {
   read -r answer
   [[ "$answer" == "y" || "$answer" == "Y" ]]
 }
+
+sauvegarder_fichier() {
+  local fichier="$1"
+  local backup_dir="$HOME/Mowgli_installer/backups"
+
+  if [ -f "$fichier" ]; then
+    mkdir -p "$backup_dir"
+    local base
+    base=$(basename "$fichier")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
+    local dest="$backup_dir/${base}.${timestamp}.bak"
+
+    cp "$fichier" "$dest"
+    echo "[INFO] Sauvegarde créée : $dest"
+  else
+    echo "[WARN] Aucun fichier à sauvegarder : $fichier introuvable"
+  fi
+}

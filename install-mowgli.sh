@@ -40,7 +40,7 @@ fi
 
 set -e
 
-# ✅ Statuts initiaux (sans P)
+# ✅ Statuts initiaux
 if [ ! -f "$STATUS_FILE" ]; then
 cat > "$STATUS_FILE" <<EOF
 I=pending
@@ -63,8 +63,8 @@ print_module_status() {
   local code="$1" label="$2" desc="$3"
   local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
   case "$value" in
-    done)   printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$desc" ;;
-    *)      printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
+    done) printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$desc" ;;
+    *)    printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
   esac
 }
 
@@ -181,7 +181,7 @@ BANNER
   echo "J) Configuration UART"
   echo "T) Outils complémentaires"
   echo "D) Docker & Compose"
-  echo "G) Configuration GPS"
+  echo "G) Configuration GPS et UDEV
   echo "C) Clonage dépôt mowgli-docker"
   echo "E) Génération .env"
   echo "O) Déploiement conteneurs Docker"
@@ -200,9 +200,21 @@ BANNER
     J|j) wrap_and_mark_done J configuration_uart ;;
     T|t) wrap_and_mark_done T installer_outils ;;
     D|d) wrap_and_mark_done D installer_docker ;;
-    G|g) wrap_and_mark_done G configuration_gps ;;
+    G|g) wrap_and_mark_done G configuration_gps_udev ;;
     C|c) wrap_and_mark_done C clonage_depot_mowgli_docker ;;
-    E|e) wrap_and_mark_done E generation_env ;;
+    E|e)
+      if generation_env; then
+        marquer_module_fait E
+        echo
+        read -p "Souhaitez-vous redémarrer les conteneurs Docker avec le nouveau .env ? (o/N) : " restart_containers
+        if [[ "$restart_containers" =~ ^[OoYy]$ ]]; then
+          wrap_and_mark_done O deploiement_conteneurs
+        else
+          echo "⏭️  Redémarrage des conteneurs ignoré."
+          pause_ou_touche
+        fi
+      fi
+      ;;
     O|o) wrap_and_mark_done O deploiement_conteneurs ;;
     M|m) wrap_and_mark_done M suivi_mqtt_robot_state ;;
     S|s) wrap_and_mark_done S configuration_mode_distant ;;
@@ -213,7 +225,8 @@ BANNER
     X|x)
       echo "À bientôt !"
       read -p "$CONFIRM_REBOOT" reboot_choice
-      [[ "$reboot_choice" =~ ^[YyOo]$ ]] && sudo reboot || exit 0 ;;
+      [[ "$reboot_choice" =~ ^[YyOo]$ ]] && sudo reboot || exit 0
+      ;;
     *) echo "[INFO] Option invalide." ;;
   esac
 

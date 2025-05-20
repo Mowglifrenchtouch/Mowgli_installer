@@ -20,19 +20,26 @@ Script interactif pour installer et configurer tout l’environnement **OpenMowe
 
 - 🛠 Mise à jour du système
 - 🔌 Activation des UART (IMU, GPS…)
-- 🛰️ Configuration GPS + UART
+- 🛰️ Configuration GPS + règles UDEV automatiques
 - 🐳 Docker & Docker Compose
 - 📁 Clonage automatique du dépôt [mowgli-docker](https://github.com/cedbossneo/mowgli-docker)
-- 🔐 Génération du fichier `.env`
+- 🔐 Génération du fichier `.env` (auto-détection IP WiFi)
 - 🚀 Déploiement des conteneurs ROS2
 - 🧪 Suivi MQTT (`robot/state`)
-- 🎨 Personnalisation logo terminal (`motd`)
+- 🌐 Support du mode distant (exposition UART via `ser2net`)
 - 🧼 Désinstallation propre avec backup
 - ⚙️ Mise à jour du firmware (expérimental)
-
 ---
 
 ## 🚀 Installation
+
+Installation en **1 commande** : 
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/Mowgli_installer/main/install.sh | bash
+```
+
+Vous pouvez aussi cloner manuellement le dépôt et lancer install-mowgli.sh. : 
 
 ```bash
 git clone https://github.com/Mowglifrenchtouch/Mowgli_installer.git
@@ -52,16 +59,18 @@ U) Mise à jour du système
 J) Configuration UART
 T) Outils complémentaires (htop, lazydocker, etc.)
 D) Docker & Compose
-G) Configuration GPS
+G) Configuration GPS (overlay + udev)
 C) Clonage dépôt mowgli-docker
-E) Génération .env
+E) Génération .env (avec IP WiFi)
 O) Déploiement conteneurs Docker
 M) Suivi MQTT robot_state
-P) Personnalisation logo (motd)
-H) Mise à jour de l’installer
+S) Mode distant (ser2net)
+H) Mise à jour de Mowgli_installer
 Z) Désinstallation et restauration
 F) Mise à jour firmware robot
+R) Réinitialiser les statuts
 X) Quitter
+
 ```
 
 ---
