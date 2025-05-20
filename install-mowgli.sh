@@ -181,7 +181,7 @@ BANNER
   echo "J) Configuration UART"
   echo "T) Outils complémentaires"
   echo "D) Docker & Compose"
-  echo "G) Configuration GPS et UDEV
+  echo "G) Configuration GPS et UDEV"
   echo "C) Clonage dépôt mowgli-docker"
   echo "E) Génération .env"
   echo "O) Déploiement conteneurs Docker"
