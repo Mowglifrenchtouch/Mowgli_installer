@@ -43,7 +43,7 @@ configuration_gps_udev() {
 echo
 
 lsusb | while read -r line; do
-  if echo "$line" | grep -Eiq "ublox|ch340|gps|rtk|cp210|ftdi"; then
+ if echo "$line" | grep -Eiq "u[-]?blox|ch340|gps|rtk|cp210|ftdi"; then
     echo "🔍 Périphérique USB détecté : $line"
     id=$(echo "$line" | grep -oP 'ID \K[0-9a-f]{4}:[0-9a-f]{4}')
     vendor_id="${id%%:*}"
