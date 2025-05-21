@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
 
-configuration_gps() {
+configuration_gps_udev() {
   local config_file="/boot/firmware/config.txt"
   local overlay="dtoverlay=uart4"
   local udev_file="/etc/udev/rules.d/50-mowgli.rules"
