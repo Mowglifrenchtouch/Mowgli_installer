@@ -38,26 +38,29 @@ configuration_gps_udev() {
   echo "=== Détection GPS USB ==="
   echo "📡 Recherche des périphériques GPS via lsusb..."
 
-  local found=0
+  local found=0 
 
-  lsusb | while read -r line; do
-    if echo "$line" | grep -Eiq "u[-]?blox|ch340|gps|rtk|cp210|ftdi"; then
-      id=$(echo "$line" | grep -oP 'ID \K[0-9a-f]{4}:[0-9a-f]{4}')
-      vendor_id="${id%%:*}"
-      product_id="${id##*:}"
-      rule="SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"$vendor_id\", ATTRS{idProduct}==\"$product_id\", SYMLINK+=\"gps\""
+  mapfile -t usb_lines < <(lsusb)
 
-      echo "🔍 GPS détecté : $line"
+ or line in "${usb_lines[@]}"; do
+  if echo "$line" | grep -Eiq "u[-]?blox|ch340|gps|rtk|cp210|ftdi"; then
+    id=$(echo "$line" | grep -oP 'ID \K[0-9a-f]{4}:[0-9a-f]{4}')
+    vendor_id="${id%%:*}"
+    product_id="${id##*:}"
+    rule="SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"$vendor_id\", ATTRS{idProduct}==\"$product_id\", SYMLINK+=\"gps\""
 
-      if ! grep -q "$vendor_id.*$product_id" "$udev_file"; then
-        echo "$rule" | sudo tee -a "$udev_file" > /dev/null
-        echo "✅ Règle ajoutée pour $vendor_id:$product_id"
-      else
-        echo "ℹ️  Règle déjà présente pour $vendor_id:$product_id"
-      fi
-      found=1
+    echo "🔍 GPS détecté : $line"
+
+    if ! grep -q "$vendor_id.*$product_id" "$udev_file"; then
+      echo "$rule" | sudo tee -a "$udev_file" > /dev/null
+      echo "✅ Règle ajoutée pour $vendor_id:$product_id"
+    else
+      echo "ℹ️  Règle déjà présente pour $vendor_id:$product_id"
     fi
-  done
+    found=1
+  fi
+done
+
 
   # 📄 Ajoute GPS depuis gps_models.conf s'il existe
   if [ -f "$conf_file" ]; then
