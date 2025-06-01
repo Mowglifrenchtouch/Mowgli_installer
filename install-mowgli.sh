@@ -31,6 +31,28 @@ STATUS_FILE="$SCRIPT_DIR/install-status.conf"
 CONFIG_FILE="/boot/firmware/config.txt"
 ENV_FILE=".env"
 
+# 🚀 Création automatique du lanceur global "mowgli"
+LAUNCHER_PATH="/usr/local/bin/mowgli"
+if [[ ! -f "$LAUNCHER_PATH" ]]; then
+  echo "[INFO] Création du raccourci global 'mowgli' dans /usr/local/bin"
+  sudo tee "$LAUNCHER_PATH" > /dev/null <<EOF
+#!/bin/bash
+bash "$SCRIPT_DIR/install-mowgli.sh"
+EOF
+  sudo chmod +x "$LAUNCHER_PATH"
+else
+  echo "[INFO] Le raccourci global 'mowgli' existe déjà"
+fi
+
+# 🔐 Pas de sudo
+if [ "$EUID" -eq 0 ]; then
+  echo "Ce script ne doit pas être exécuté avec sudo."
+  echo "Lancez-le sans sudo : ./install-mowgli.sh"
+  exit 1
+fi
+
+echo "✅ Lanceur intégré automatiquement. Vous pouvez maintenant lancer le script avec : mowgli"
+
 # 🔐 Pas de sudo
 if [ "$EUID" -eq 0 ]; then
   echo "Ce script ne doit pas être exécuté avec sudo."

@@ -36,7 +36,7 @@ Script interactif pour installer et configurer tout l’environnement **OpenMowe
 Installation rapide : 
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/Mowgli_installer/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/mowgli_installer/main/install.sh | bash
 ```
 📦 Options disponibles :
 
@@ -44,7 +44,7 @@ curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/Mowgli_installer/m
 (utile si un dossier ~/Mowgli_installer est déjà présent)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/Mowgli_installer/main/install.sh | bash -s -- --reset
+curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/mowgli_installer/main/install.sh | bash -s -- --reset
 ```
 
 Installation manuel : 
@@ -52,7 +52,7 @@ Installation manuel :
 Vous pouvez aussi cloner manuellement le dépôt et lancer install-mowgli.sh.
 
 ```bash
-git clone https://github.com/Mowglifrenchtouch/Mowgli_installer.git
+git clone https://github.com/Mowglifrenchtouch/mowgli_installer.git
 cd Mowgli_installer
 chmod +x install-mowgli.sh
 ./install-mowgli.sh
