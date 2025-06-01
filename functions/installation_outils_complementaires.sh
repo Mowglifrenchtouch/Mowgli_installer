@@ -1,44 +1,40 @@
 #!/bin/bash
 # functions/installation_outils_complementaires.sh
-# Menu d'installation et désinstallation des outils CLI utiles
+# Menu d'installation intelligente des outils CLI utiles
 
-installer_paquet() {
-  local pkg="$1"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$SCRIPT_DIR/functions/utils.sh" ] && source "$SCRIPT_DIR/functions/utils.sh"
 
-  if [[ "$pkg" == "lazydocker" ]]; then
-    echo "[INFO] Installation manuelle de lazydocker..."
-    curl -Lo lazydocker.tar.gz https://github.com/jesseduffield/lazydocker/releases/latest/download/lazydocker_0.21.0_Linux_x86_64.tar.gz
-    tar xf lazydocker.tar.gz
-    sudo install lazydocker /usr/local/bin/
-    rm -f lazydocker lazydocker.tar.gz
-  else
-    sudo apt install -y "$pkg"
-  fi
-}
+STATUS_FILE="$SCRIPT_DIR/.install_status.conf"
 
 installer_outils() {
   local conf_file="$SCRIPT_DIR/complementary_tools.conf"
-  local -a outils
-  local -a noms
+  local -a outils noms installables
   local -a choix
   local index=1
+  local ligne
+  local icon_ok="✅"
+  local icon_no="❌"
 
   echo "=== Installation des outils complémentaires ==="
-  echo "🔧 Liste des outils disponibles :"
 
+  # Chargement du fichier de config
   if [[ ! -f "$conf_file" ]]; then
     echo "[ERREUR] Fichier de configuration manquant : $conf_file"
+    pause_ou_touche
     return 1
   fi
 
-  while IFS="|" read -r cmd desc; do
+  echo "🔧 Liste des outils disponibles :"
+  while IFS="|" read -r cmd desc manual; do
     [[ "$cmd" =~ ^#.*$ || -z "$cmd" ]] && continue
     outils+=("$cmd")
     noms+=("$desc")
     if command -v "$cmd" >/dev/null 2>&1; then
-      echo "  $index) $cmd  -  $desc ✅"
+      echo "  $index) $cmd  -  $desc $icon_ok"
     else
-      echo "  $index) $cmd  -  $desc ❌"
+      echo "  $index) $cmd  -  $desc $icon_no"
+      installables+=("$cmd")
     fi
     ((index++))
   done < "$conf_file"
@@ -47,6 +43,7 @@ installer_outils() {
   read -p "Sélectionnez les outils à installer (ex: 1 3 ou 'a') : " -a choix
 
   local to_install=()
+
   if [[ "${choix[0]}" == "a" ]]; then
     to_install=("${outils[@]}")
   else
@@ -57,19 +54,31 @@ installer_outils() {
     done
   fi
 
-  if [ "${#to_install[@]}" -gt 0 ]; then
+  if [ "${#to_install[@]}" -eq 0 ]; then
+    echo "[INFO] Aucun outil à installer."
+  else
+    echo "📦 Installation de : ${to_install[*]}"
     sudo apt update
-    for pkg in "${to_install[@]}"; do
-      echo "📦 Installation de : $pkg"
-      installer_paquet "$pkg"
+    for outil in "${to_install[@]}"; do
+      manual=$(grep "^$outil|" "$conf_file" | cut -d'|' -f3)
+      if [[ "$manual" == "manual" ]]; then
+        echo "[INFO] Installation manuelle de $outil..."
+        if [[ "$outil" == "lazydocker" ]]; then
+          curl -s https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+        else
+          echo "[WARN] Pas de méthode d'installation manuelle définie pour $outil"
+        fi
+      else
+        sudo apt install -y "$outil"
+      fi
+      if command -v "$outil" >/dev/null 2>&1; then
+        echo "$outil=ok" >> "$STATUS_FILE"
+      else
+        echo "$outil=ko" >> "$STATUS_FILE"
+      fi
     done
     echo "✅ Installation terminée."
-  else
-    echo "[INFO] Aucun outil sélectionné."
   fi
 
-  echo
-  echo "[INFO] Appuyez sur une touche pour continuer ou attendez 10 secondes..."
-  read -t 10 -n 1 -s
+  pause_ou_touche
 }
-
