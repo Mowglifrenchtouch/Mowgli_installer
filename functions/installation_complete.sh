@@ -13,7 +13,6 @@ installation_complete() {
   wrap_and_mark_done U mise_a_jour_systeme
   wrap_and_mark_done J configuration_uart
   wrap_and_mark_done G configuration_gps
-  wrap_and_mark_done T installer_outils
   wrap_and_mark_done D install_docker
   wrap_and_mark_done C clonage_depot_mowgli_docker
   wrap_and_mark_done E generation_env
