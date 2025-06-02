@@ -41,7 +41,7 @@ curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/mowgli_installer/m
 📦 Options disponibles :
 
 --reset : supprime l’installation existante et réinstalle depuis zéro
-(utile si un dossier ~/Mowgli_installer est déjà présent)
+(utile si un dossier ~/mowgli_installer est déjà présent)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Mowglifrenchtouch/mowgli_installer/main/install.sh | bash -s -- --reset
@@ -56,6 +56,38 @@ git clone https://github.com/Mowglifrenchtouch/mowgli_installer.git
 cd Mowgli_installer
 chmod +x install-mowgli.sh
 ./install-mowgli.sh
+```
+## 🚀 Lancer l'installateur Mowgli
+Une fois installé, vous pouvez exécuter l'interface de configuration Mowgli avec une simple commande dans votre terminal :
+
+```bash
+mowgli
+```
+✅ Ce lanceur automatique gère pour vous :
+
+-Le clonage du dépôt (si nécessaire)
+
+-La réinstallation propre avec --reset
+
+-Le lancement de l’interface install-mowgli.sh
+
+Et vous pouvez l’exécuter à tout moment !
+
+## 🔄 Forcer la réinstallation (optionnel)
+Pour forcer la suppression du dossier existant et refaire une installation propre, utilisez :
+
+```bash
+mowgli --reset
+```
+## 📦 Première installation (si vous n’avez pas encore le lanceur)
+
+```bash
+git clone https://github.com/Mowglifrenchtouch/Mowgli_installer.git
+cd Mowgli_installer
+chmod +x scripts/mowgli install-mowgli.sh
+sudo cp scripts/mowgli /usr/local/bin/mowgli
+mowgli
+
 ```
 
 ---
