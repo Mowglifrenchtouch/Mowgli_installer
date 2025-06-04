@@ -1,4 +1,4 @@
-# 🚀 Mowgli_installer
+# 🚀 Mowgli_installer Beta v1
 
 ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![Shell Script](https://img.shields.io/badge/script-bash-blue)
