@@ -28,30 +28,6 @@ fi
 
 DEBUG=${DEBUG:-0}
 STATUS_FILE="$SCRIPT_DIR/install-status.conf"
-CONFIG_FILE="/boot/firmware/config.txt"
-ENV_FILE=".env"
-
-# 🚀 Création automatique du lanceur global "mowgli"
-LAUNCHER_PATH="/usr/local/bin/mowgli"
-if [[ ! -f "$LAUNCHER_PATH" ]]; then
-  echo "[INFO] Création du raccourci global 'mowgli' dans /usr/local/bin"
-  sudo tee "$LAUNCHER_PATH" > /dev/null <<EOF
-#!/bin/bash
-bash "$SCRIPT_DIR/install-mowgli.sh"
-EOF
-  sudo chmod +x "$LAUNCHER_PATH"
-else
-  echo "[INFO] Le raccourci global 'mowgli' existe déjà"
-fi
-
-# 🔐 Pas de sudo
-if [ "$EUID" -eq 0 ]; then
-  echo "Ce script ne doit pas être exécuté avec sudo."
-  echo "Lancez-le sans sudo : ./install-mowgli.sh"
-  exit 1
-fi
-
-echo "✅ Lanceur intégré automatiquement. Vous pouvez maintenant lancer le script avec : mowgli"
 
 # 🔐 Pas de sudo
 if [ "$EUID" -eq 0 ]; then
@@ -62,75 +38,8 @@ fi
 
 set -e
 
-# ✅ Statuts initiaux
-if [ ! -f "$STATUS_FILE" ]; then
-cat > "$STATUS_FILE" <<EOF
-I=pending
-U=pending
-J=pending
-T=pending
-D=pending
-G=pending
-C=pending
-E=pending
-O=pending
-M=pending
-H=pending
-Z=pending
-F=pending
-EOF
-fi
-
-print_module_status() {
-  local code="$1" label="$2" desc="$3"
-  local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
-  case "$value" in
-    done) printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$desc" ;;
-    *)    printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
-  esac
-}
-
-marquer_module_fait() {
-  local code="$1"
-  sed -i "s/^$code=.*/$code=done/" "$STATUS_FILE" 2>/dev/null || echo "$code=done" >> "$STATUS_FILE"
-}
-
-wrap_and_mark_done() {
-  local code="$1"; shift
-  local command="$@"
-  if eval "$command"; then
-    marquer_module_fait "$code"
-  else
-    echo "[ERREUR] La commande a échoué → $command"
-    pause_ou_touche
-  fi
-}
-
-reset_statuts_modules() {
-  echo "⚠️  Cette action va réinitialiser tous les statuts des modules."
-  read -p "Êtes-vous sûr ? (o/N) : " confirm
-  if [[ "$confirm" =~ ^[Oo]$ ]]; then
-    cat > "$STATUS_FILE" <<EOF
-I=pending
-U=pending
-J=pending
-T=pending
-D=pending
-G=pending
-C=pending
-E=pending
-O=pending
-M=pending
-H=pending
-Z=pending
-F=pending
-EOF
-    echo "✅ Tous les modules ont été réinitialisés."
-  else
-    echo "⏭️  Réinitialisation annulée."
-  fi
-  pause_ou_touche
-}
+# 🔎 Détection GPS / RTK (au démarrage)
+detect_gps_rtk
 
 # 🔁 Menu principal
 while true; do
@@ -194,7 +103,8 @@ BANNER
   echo "RAM utilisée   : $MEM"
   echo "Disque libre   : $DISK"
   echo "État système   : $SYSTEM_STATUS"
-  echo "Etat Mowgli_Installer : $INSTALLER_STATUS"
+  echo "État Installer : $INSTALLER_STATUS"
+  afficher_infos_gps_rtk
   echo
 
   echo "===== INSTALLATION & CONFIGURATION ====="
@@ -213,6 +123,7 @@ BANNER
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
   echo "R) Réinitialiser les statuts"
+  echo "P) Rafraîchir GPS/RTK"
   echo "X) Quitter"
 
   read -p "Choix> " choice
@@ -244,6 +155,11 @@ BANNER
     Z|z) wrap_and_mark_done Z desinstallation_restoration ;;
     F|f) wrap_and_mark_done F mise_a_jour_firmware_robot ;;
     R|r) reset_statuts_modules ;;
+    P|p)
+      detect_gps_rtk
+      echo "[INFO] Informations GPS/RTK mises à jour."
+      pause_ou_touche
+      ;;
     X|x)
       echo "À bientôt !"
       read -p "$CONFIRM_REBOOT" reboot_choice
