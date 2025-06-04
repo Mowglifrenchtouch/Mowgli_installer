@@ -63,13 +63,7 @@ Une fois installé, vous pouvez exécuter l'interface de configuration Mowgli av
 ```bash
 mowgli
 ```
-✅ Ce lanceur automatique gère pour vous :
-
--Le clonage du dépôt (si nécessaire)
-
--La réinstallation propre avec --reset
-
--Le lancement de l’interface install-mowgli.sh
+✅ Ce lanceur automatique gère pour vous le lancement de l’interface install-mowgli.sh
 
 Et vous pouvez l’exécuter à tout moment !
 
