@@ -43,3 +43,12 @@ sauvegarder_fichier() {
     echo "[WARN] Aucun fichier à sauvegarder : $fichier introuvable"
   fi
 }
+
+print_module_status() {
+  local code="$1" label="$2" desc="$3"
+  local value=$(grep "^$code=" "$STATUS_FILE" 2>/dev/null | cut -d= -f2)
+  case "$value" in
+    done) printf "[✅] %s) %-30s -> %s\n" "$code" "$label" "$desc" ;;
+    *)    printf "[⏳] %s) %-30s -> à faire\n" "$code" "$label" ;;
+  esac
+}
