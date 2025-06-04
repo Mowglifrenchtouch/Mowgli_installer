@@ -37,6 +37,8 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 set -e
+trap "echo; echo 'ℹ️  Pour relancer l’installateur plus tard, tapez simplement : mowgli'" EXIT
+
 
 # 🔎 Détection GPS / RTK (au démarrage)
 detect_gps_rtk
