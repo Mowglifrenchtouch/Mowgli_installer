@@ -166,7 +166,8 @@ BANNER
       pause_ou_touche
       ;;
     Y|y)
-      bash "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
+      source "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
+      menu_diagnostic_mowgli
       ;;
     X|x)
       echo "À bientôt !"
