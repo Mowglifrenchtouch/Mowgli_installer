@@ -39,16 +39,15 @@ fi
 set -e
 trap "echo; echo 'ℹ️  Pour relancer l’installateur plus tard, tapez simplement : mowgli'" EXIT
 
-
 # 🔎 Détection GPS / RTK (au démarrage)
 detect_gps_rtk
 
-# 🔁 Menu principal
+# ♻️ Menu principal
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear && cat <<'BANNER'
     __  ___                    ___       ____           __        ____         
    /  |/  /___ _      ______ _/ (_)     /  _/___  _____/ /_____ _/ / /__  _____
-  / /|_/ / __ \ | /| / / __ `/ / /_____ / // __ \/ ___/ __/ __ `/ / / _ \/ ___/
+  / /|_/ / __ \ | /| / / __ `/ / /_____/ // __ \/ ___/ __/ __ `/ / / _ \/ ___/
  / /  / / /_/ / |/ |/ / /_/ / / /_____/ // / / (__  ) /_/ /_/ / / /  __/ /    
 /_/  /_/\____/|__/|__/\__, /_/_/     /___/_/ /_/____/\__/\__,_/_/_/\___/_/     
                      /____/                                                  
@@ -125,7 +124,13 @@ BANNER
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
   echo "R) Réinitialiser les statuts"
-  echo "P) Rafraîchir GPS/RTK"
+  echo "P) Rafrâchir GPS/RTK"
+  echo
+  echo "===== DIAGNOSTIC DE DÉPANNAGE ====="
+  echo "D) Menu général de diagnostic (GPS / IMU)"
+  echo "V) Voir le dernier résumé du diagnostic IMU"
+  echo "W) Voir le dernier résumé du diagnostic GPS"
+  echo
   echo "X) Quitter"
 
   read -p "Choix> " choice
@@ -160,6 +165,28 @@ BANNER
     P|p)
       detect_gps_rtk
       echo "[INFO] Informations GPS/RTK mises à jour."
+      pause_ou_touche
+      ;;
+    D|d)
+      bash "$SCRIPT_DIR/scripts/diagnostic-menu.sh"
+      pause_ou_touche
+      ;;
+    V|v)
+      if [ -f /tmp/diagnostic_imu_resume.txt ]; then
+        echo "===== Résumé du dernier diagnostic IMU ====="
+        cat /tmp/diagnostic_imu_resume.txt
+      else
+        echo "[❌] Aucun diagnostic IMU trouvé. Veuillez lancer un diagnostic d'abord."
+      fi
+      pause_ou_touche
+      ;;
+    W|w)
+      if [ -f /tmp/diagnostic_gps_resume.txt ]; then
+        echo "===== Résumé du dernier diagnostic GPS ====="
+        cat /tmp/diagnostic_gps_resume.txt
+      else
+        echo "[❌] Aucun diagnostic GPS trouvé. Veuillez lancer un diagnostic d'abord."
+      fi
       pause_ou_touche
       ;;
     X|x)
