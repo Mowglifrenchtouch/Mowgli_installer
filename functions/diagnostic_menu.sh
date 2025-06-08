@@ -1,5 +1,5 @@
 #!/bin/bash
-# diagnostic-menu.sh : Menu général de diagnostic Mowgli
+# diagnostic_menu.sh : Menu général de diagnostic Mowgli
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
