@@ -140,11 +140,6 @@ BANNER
     J|j) wrap_and_mark_done J configuration_uart ;;
     T|t) wrap_and_mark_done T installer_outils ;;
     D|d) wrap_and_mark_done D installer_docker ;;
-    Y|y)
-         bash "$SCRIPT_DIR/scripts/diagnostic-menu.sh"
-         pause_ou_touche
-        ;;
-
     G|g) wrap_and_mark_done G configuration_gps_udev ;;
     C|c) wrap_and_mark_done C clonage_depot_mowgli_docker ;;
     E|e)
@@ -172,7 +167,7 @@ BANNER
       echo "[INFO] Informations GPS/RTK mises à jour."
       pause_ou_touche
       ;;
-    D|d)
+    Y|y)
       bash "$SCRIPT_DIR/scripts/diagnostic-menu.sh"
       pause_ou_touche
       ;;
