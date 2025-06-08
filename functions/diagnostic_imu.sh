@@ -64,13 +64,26 @@ elif echo "$IMU_OUTPUT" | grep -qi "icm20948"; then
 else
   IMU_NAME="Non identifié"
 fi
-echo "🔎 IMU détectée : $IMU_NAME" | tee -a "$RESUME_FILE"
+
+# Vérifier si l'IMU est connectée
+if [ "$IMU_NAME" != "Non identifié" ]; then
+  echo "🔎 IMU détectée : $IMU_NAME (connectée)" | tee -a "$RESUME_FILE"
+else
+  echo "🔎 IMU détectée : $IMU_NAME" | tee -a "$RESUME_FILE"
+fi
 
 # Résumé filtré
 if echo "$IMU_OUTPUT" | grep -q "Trames"; then
   echo "[✔️] Trames IMU détectées avec succès." >> "$RESUME_FILE"
 else
   echo "[⚠️] Aucune trame IMU claire détectée." >> "$RESUME_FILE"
+fi
+
+# Vérification de la présence de valeurs numériques utiles
+if echo "$IMU_OUTPUT" | grep -Eo '[0-9]+\.[0-9]+' | awk '$1 > 0 { exit 0 } END { exit 1 }'; then
+  echo "[✔️] Données IMU valides : valeurs numériques supérieures à zéro détectées." >> "$RESUME_FILE"
+else
+  echo "[⚠️] Aucune valeur numérique exploitable trouvée (>= 0)." >> "$RESUME_FILE"
 fi
 
 echo "[✅] Diagnostic IMU terminé. Résumé disponible dans : $RESUME_FILE" | tee -a "$LOG_FILE"
