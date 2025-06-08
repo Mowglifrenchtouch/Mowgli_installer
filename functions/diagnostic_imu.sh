@@ -5,35 +5,72 @@
 
 SCRIPT_NAME="Diagnostic IMU"
 RESUME_FILE="/tmp/diagnostic_imu_resume.txt"
+LOG_FILE="/tmp/diagnostic_imu_debug.log"
 
-echo "[🔍] $SCRIPT_NAME - Démarrage..."
+DATE_EXEC=$(date "+%d/%m/%Y %H:%M:%S")
+echo "[🔍] $SCRIPT_NAME - Démarrage..." | tee "$LOG_FILE"
 echo "[🧾] Résumé du diagnostic :" > "$RESUME_FILE"
+echo "🕒 Date du test : $DATE_EXEC" >> "$RESUME_FILE"
 
-# Recherche d'un ST-Link (USB vers carte mère YardForce/Mowgli)
-IMU_USB_PORT=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | head -n 1)
+# Compter les conteneurs Docker actifs
+RUNNING_DOCKERS=$(docker ps -q | wc -l)
+echo "🐳 Conteneurs Docker actifs : $RUNNING_DOCKERS (doit être > 0 pour la détection de l'IMU)" >> "$RESUME_FILE"
 
-if [ -z "$IMU_USB_PORT" ]; then
-  echo "[❌] Aucun port USB pour la carte mère/IMU n'a été détecté." | tee -a "$RESUME_FILE"
-  echo "[💡] Assurez-vous que la carte mère est bien connectée en USB."
-else
-  echo "[🔌] Port détecté : $IMU_USB_PORT" | tee -a "$RESUME_FILE"
-
-  echo "[📡] Lecture de trames IMU sur $IMU_USB_PORT..."
-  sudo timeout 3 cat "$IMU_USB_PORT" > /tmp/imu_output.log
-
-  if grep -aE '\$IMU|\$YPR' /tmp/imu_output.log >/dev/null; then
-    echo "  ➕ Trames IMU (YPR/NMEA) détectées." | tee -a "$RESUME_FILE"
-  elif grep -aE 'ACC|GYRO|MAG' /tmp/imu_output.log >/dev/null; then
-    echo "  ➕ Trames brut de capteur détectées (accéléro, gyroscope, magnéto)." | tee -a "$RESUME_FILE"
-  else
-    echo "  ⚠️  Aucune trame identifiable. IMU absente ou mal configurée." | tee -a "$RESUME_FILE"
+if [ "$RUNNING_DOCKERS" -eq 0 ]; then
+  echo "[❌] Aucun conteneur Docker actif. L'IMU ne pourra pas être détectée." | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo "[💡] Veuillez lancer les conteneurs Docker avant de relancer ce test." | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo -n "[❓] Voulez-vous forcer le redémarrage des conteneurs maintenant ? (o/N) : "
+  read -r restart_choice
+  if [[ "$restart_choice" =~ ^[OoYy]$ ]]; then
+    echo "[🚀] Redémarrage des conteneurs Docker..." | tee -a "$RESUME_FILE" "$LOG_FILE"
+    docker compose down && docker compose up -d
+    echo "[✅] Conteneurs relancés avec succès." | tee -a "$RESUME_FILE" "$LOG_FILE"
+    docker ps --format "table {{.Names}}\t{{.Status}}" | tee -a "$RESUME_FILE" "$LOG_FILE"
+    echo "[ℹ️] Veuillez relancer le diagnostic maintenant que les services sont actifs."
   fi
-
-  echo "  └── Contenu extrait :" >> "$RESUME_FILE"
-  cat /tmp/imu_output.log >> "$RESUME_FILE"
-  echo >> "$RESUME_FILE"
-
-  rm -f /tmp/imu_output.log
+  exit 1
 fi
 
-echo "[✅] Diagnostic IMU terminé. Résumé disponible dans : $RESUME_FILE"
+# Vérification de la connexion USB de la carte mère
+IMU_USB_PORT=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | head -n 1)
+if [ -z "$IMU_USB_PORT" ]; then
+  echo "[❌] Aucun port USB pour la carte mère/IMU n'a été détecté." | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo "[💡] Assurez-vous que la carte mère est bien connectée en USB." | tee -a "$RESUME_FILE" "$LOG_FILE"
+else
+  echo "[🔌] Port détecté : $IMU_USB_PORT (USB vers carte mère YardForce/Mowgli)" | tee -a "$RESUME_FILE" "$LOG_FILE"
+fi
+
+# Détection automatique du chemin imu.sh
+USER_HOME=$(getent passwd "$USER" | cut -d: -f6)
+IMU_SCRIPT="$USER_HOME/mowgli-docker/utils/imu.sh"
+if [ ! -f "$IMU_SCRIPT" ]; then
+  echo "[❌] Fichier imu.sh introuvable à l'emplacement attendu : $IMU_SCRIPT" | tee -a "$RESUME_FILE" "$LOG_FILE"
+  exit 1
+fi
+
+# Appel du script imu.sh et récupération des trames
+IMU_OUTPUT=$(bash "$IMU_SCRIPT")
+echo "$IMU_OUTPUT" | tee -a "$LOG_FILE"
+
+# Identification de l'IMU
+if echo "$IMU_OUTPUT" | grep -q "MPU-6050"; then
+  IMU_NAME="MPU-6050"
+elif echo "$IMU_OUTPUT" | grep -q "MPU-9250"; then
+  IMU_NAME="MPU-9250"
+elif echo "$IMU_OUTPUT" | grep -qi "bno085\|bno055"; then
+  IMU_NAME="BNO0xx"
+elif echo "$IMU_OUTPUT" | grep -qi "icm20948"; then
+  IMU_NAME="ICM-20948"
+else
+  IMU_NAME="Non identifié"
+fi
+echo "🔎 IMU détectée : $IMU_NAME" | tee -a "$RESUME_FILE"
+
+# Résumé filtré
+if echo "$IMU_OUTPUT" | grep -q "Trames"; then
+  echo "[✔️] Trames IMU détectées avec succès." >> "$RESUME_FILE"
+else
+  echo "[⚠️] Aucune trame IMU claire détectée." >> "$RESUME_FILE"
+fi
+
+echo "[✅] Diagnostic IMU terminé. Résumé disponible dans : $RESUME_FILE" | tee -a "$LOG_FILE"

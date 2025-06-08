@@ -3,6 +3,9 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# Détection automatique du chemin vers imu.sh
+IMU_SCRIPT_PATH=$(find "$SCRIPT_DIR" -type f -name imu.sh | head -n1)
+
 menu_diagnostic_mowgli() {
   while true; do
     clear
@@ -65,7 +68,7 @@ menu_diagnostic_mowgli() {
         ;;
       4)
         echo "[INFO] Test de connexion IMU..."
-        bash "$SCRIPT_DIR/functions/diagnostic_imu.sh"
+        bash "$SCRIPT_DIR/functions/diagnostic_imu.sh" "$IMU_SCRIPT_PATH"
         if grep -q '\[ERREUR\]' /tmp/diagnostic_imu_resume.txt 2>/dev/null; then
           echo
           echo "[⚠️] Une erreur a été détectée dans le diagnostic IMU. Affichage des logs :"
