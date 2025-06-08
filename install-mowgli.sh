@@ -127,7 +127,7 @@ BANNER
   echo "P) Rafrâchir GPS/RTK"
   echo
   echo "===== DIAGNOSTIC DE DÉPANNAGE ====="
-  echo "D) Menu général de diagnostic (GPS / IMU)"
+  echo "Y) Menu général de diagnostic (GPS / IMU)"
   echo "V) Voir le dernier résumé du diagnostic IMU"
   echo "W) Voir le dernier résumé du diagnostic GPS"
   echo
@@ -140,6 +140,11 @@ BANNER
     J|j) wrap_and_mark_done J configuration_uart ;;
     T|t) wrap_and_mark_done T installer_outils ;;
     D|d) wrap_and_mark_done D installer_docker ;;
+    Y|y)
+         bash "$SCRIPT_DIR/scripts/diagnostic-menu.sh"
+         pause_ou_touche
+        ;;
+
     G|g) wrap_and_mark_done G configuration_gps_udev ;;
     C|c) wrap_and_mark_done C clonage_depot_mowgli_docker ;;
     E|e)
