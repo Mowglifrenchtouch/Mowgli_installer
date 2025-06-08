@@ -166,7 +166,7 @@ BANNER
       pause_ou_touche
       ;;
     Y|y)
-      source "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
+      source "$SCRIPT_DIR/functions/diagnostic_menu.sh"
       menu_diagnostic_mowgli
       ;;
     X|x)

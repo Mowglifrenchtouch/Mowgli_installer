@@ -1,5 +1,5 @@
 #!/bin/bash
-# diagnostic-menu.sh : Menu général de diagnostic Mowgli
+# diagnostic_menu.sh : Menu général de diagnostic Mowgli
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -19,7 +19,7 @@ menu_diagnostic_mowgli() {
     case "$diag_choice" in
       1)
         echo "[INFO] Lancement du diagnostic GPS..."
-        bash "$SCRIPT_DIR/scripts/diagnostique_gps.sh"
+        bash "$SCRIPT_DIR/functions/diagnostique_gps.sh"
         if grep -q '\[ERREUR\]' /tmp/diagnostic_gps_resume.txt 2>/dev/null; then
           echo
           echo "[⚠️] Une erreur a été détectée dans le diagnostic GPS. Affichage des logs :"
@@ -65,7 +65,7 @@ menu_diagnostic_mowgli() {
         ;;
       4)
         echo "[INFO] Test de connexion IMU..."
-        bash "$SCRIPT_DIR/scripts/diagnostic_imu.sh"
+        bash "$SCRIPT_DIR/functions/diagnostic_imu.sh"
         if grep -q '\[ERREUR\]' /tmp/diagnostic_imu_resume.txt 2>/dev/null; then
           echo
           echo "[⚠️] Une erreur a été détectée dans le diagnostic IMU. Affichage des logs :"
