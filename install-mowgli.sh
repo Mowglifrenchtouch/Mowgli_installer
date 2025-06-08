@@ -63,7 +63,7 @@ BANNER
   print_module_status D "Docker & Compose"            "idempotent"
   print_module_status G "Configuration GPS"           "dtoverlay=uart4"
   print_module_status C "Clonage mowgli-docker"       "git clone/pull"
-  print_module_status E "Génération .env"             ".env modifiable"
+  print_module_status E ".env (généré)"               "personnalisable"
   print_module_status O "Déploiement Docker"          "docker compose"
   print_module_status M "Suivi MQTT"                  "mosquitto_sub"
   print_module_status S "Mode distant (ser2net)"      "UART → TCP (local → serveur)"
@@ -124,12 +124,10 @@ BANNER
   echo "Z) Désinstallation et restauration"
   echo "F) Mise à jour firmware robot"
   echo "R) Réinitialiser les statuts"
-  echo "P) Rafrâchir GPS/RTK"
+  echo "P) Rafraîchir GPS/RTK"
   echo
   echo "===== DIAGNOSTIC DE DÉPANNAGE ====="
   echo "Y) Menu général de diagnostic (GPS / IMU)"
-  echo "V) Voir le dernier résumé du diagnostic IMU"
-  echo "W) Voir le dernier résumé du diagnostic GPS"
   echo
   echo "X) Quitter"
 
@@ -169,24 +167,6 @@ BANNER
       ;;
     Y|y)
       bash "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
-      pause_ou_touche
-      ;;
-    V|v)
-      if [ -f /tmp/diagnostic_imu_resume.txt ]; then
-        echo "===== Résumé du dernier diagnostic IMU ====="
-        cat /tmp/diagnostic_imu_resume.txt
-      else
-        echo "[❌] Aucun diagnostic IMU trouvé. Veuillez lancer un diagnostic d'abord."
-      fi
-      pause_ou_touche
-      ;;
-    W|w)
-      if [ -f /tmp/diagnostic_gps_resume.txt ]; then
-        echo "===== Résumé du dernier diagnostic GPS ====="
-        cat /tmp/diagnostic_gps_resume.txt
-      else
-        echo "[❌] Aucun diagnostic GPS trouvé. Veuillez lancer un diagnostic d'abord."
-      fi
       pause_ou_touche
       ;;
     X|x)
