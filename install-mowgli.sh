@@ -167,14 +167,13 @@ BANNER
       ;;
     Y|y)
       bash "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
-      pause_ou_touche
       ;;
     X|x)
       echo "À bientôt !"
       read -p "$CONFIRM_REBOOT" reboot_choice
       [[ "$reboot_choice" =~ ^[YyOo]$ ]] && sudo reboot || exit 0
       ;;
-    *) echo "[INFO] Option invalide." ;;
+    *) echo "[ERREUR] Choix invalide." ;;
   esac
 
   [[ "$DEBUG" -eq 1 ]] && echo "[DEBUG] Retour au menu" || pause_ou_touche
