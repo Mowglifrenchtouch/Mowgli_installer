@@ -168,7 +168,7 @@ BANNER
       pause_ou_touche
       ;;
     Y|y)
-      bash "$SCRIPT_DIR/scripts/diagnostic-menu.sh"
+      bash "$SCRIPT_DIR/scripts/diagnostic_menu.sh"
       pause_ou_touche
       ;;
     V|v)
