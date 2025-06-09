@@ -51,6 +51,11 @@ fi
 # Appel du script imu.sh et récupération des trames
 IMU_OUTPUT=$(bash "$IMU_SCRIPT")
 echo "$IMU_OUTPUT" | tee -a "$LOG_FILE"
+echo "" >> "$RESUME_FILE"
+echo "===== EXTRAIT DES DONNÉES IMU =====" >> "$RESUME_FILE"
+echo "$IMU_OUTPUT" | head -n 10 >> "$RESUME_FILE"
+echo "... (voir log complet dans $LOG_FILE)" >> "$RESUME_FILE"
+echo "" >> "$RESUME_FILE"
 
 # Identification de l'IMU
 if echo "$IMU_OUTPUT" | grep -q "MPU-6050"; then
@@ -87,3 +92,8 @@ else
 fi
 
 echo "[✅] Diagnostic IMU terminé. Résumé disponible dans : $RESUME_FILE" | tee -a "$LOG_FILE"
+echo
+
+echo "===== 🧾 RÉSUMÉ DU DIAGNOSTIC IMU ====="
+cat "$RESUME_FILE"
+echo "======================================"
