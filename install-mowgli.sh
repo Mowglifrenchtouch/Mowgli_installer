@@ -171,8 +171,14 @@ BANNER
       ;;
     X|x)
       echo "À bientôt !"
+      source "$SCRIPT_DIR/lang/${LANG_CODE}.sh"
       read -p "$CONFIRM_REBOOT" reboot_choice
-      [[ "$reboot_choice" =~ ^[YyOo]$ ]] && sudo reboot || exit 0
+      if [[ "$reboot_choice" =~ ^[YyOo]$ ]]; then
+        echo "✅ Reboot en cours..."
+        sudo reboot
+      else
+        exit 0
+      fi
       ;;
     *) echo "[ERREUR] Choix invalide." ;;
   esac
