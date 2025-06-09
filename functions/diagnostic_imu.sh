@@ -34,10 +34,10 @@ fi
 # Vérification de la connexion USB de la carte mère
 IMU_USB_PORT=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | head -n 1)
 if [ -z "$IMU_USB_PORT" ]; then
-  echo "[❌] Aucun port USB pour la carte mère/IMU n'a été détecté." | tee -a "$RESUME_FILE" "$LOG_FILE"
-  echo "[💡] Assurez-vous que la carte mère est bien connectée en USB." | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo "[❌] Carte mère non détectée : aucun port USB pour la carte mère/IMU." | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo "[💡] Vérifiez que le câble USB de la carte mère est bien connecté." | tee -a "$RESUME_FILE" "$LOG_FILE"
 else
-  echo "[🔌] Port détecté : $IMU_USB_PORT (USB vers carte mère YardForce/Mowgli)" | tee -a "$RESUME_FILE" "$LOG_FILE"
+  echo "[✅] Carte mère détectée sur le port : $IMU_USB_PORT (USB vers carte mère YardForce/Mowgli)" | tee -a "$RESUME_FILE" "$LOG_FILE"
 fi
 
 # Détection automatique du chemin imu.sh
@@ -74,7 +74,7 @@ fi
 if [ "$IMU_NAME" != "Non identifié" ]; then
   echo "🔎 IMU détectée : $IMU_NAME (connectée)" | tee -a "$RESUME_FILE"
 else
-  echo "🔎 IMU détectée : $IMU_NAME" | tee -a "$RESUME_FILE"
+  echo "🔎 IMU détectée : $IMU_NAME (non connectée)" | tee -a "$RESUME_FILE"
 fi
 
 # Résumé filtré
@@ -87,8 +87,9 @@ fi
 # Vérification de la présence de valeurs numériques utiles
 if echo "$IMU_OUTPUT" | grep -Eo '[0-9]+\.[0-9]+' | awk '$1 > 0 { exit 0 } END { exit 1 }'; then
   echo "[✔️] Données IMU valides : valeurs numériques supérieures à zéro détectées." >> "$RESUME_FILE"
+  echo "[ℹ️] IMU fonctionnelle : des mouvements sont bien détectés sur les axes." >> "$RESUME_FILE"
 else
-  echo "[⚠️] Aucune valeur numérique exploitable trouvée (>= 0)." >> "$RESUME_FILE"
+  echo "[⚠️] Aucune valeur numérique exploitable trouvée (>= 0). Vérifiez l'immobilité ou la connexion." >> "$RESUME_FILE"
 fi
 
 echo "[✅] Diagnostic IMU terminé. Résumé disponible dans : $RESUME_FILE" | tee -a "$LOG_FILE"

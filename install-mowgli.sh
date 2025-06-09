@@ -42,6 +42,20 @@ trap "echo; echo 'ℹ️  Pour relancer l’installateur plus tard, tapez simple
 # 🔎 Détection GPS / RTK (au démarrage)
 detect_gps_rtk
 
+# Diagnostic IMU résumé (si disponible)
+IMU_RESUME="/tmp/diagnostic_imu_resume.txt"
+if [ -f "$IMU_RESUME" ]; then
+  IMU_STATUS_LINE=$(grep "IMU détectée" "$IMU_RESUME" | head -n 1)
+  if grep -q "fonctionnelle" "$IMU_RESUME"; then
+    IMU_ICON="✅"
+  else
+    IMU_ICON="⚠️"
+  fi
+  IMU_STATUS="$IMU_ICON $IMU_STATUS_LINE"
+else
+  IMU_STATUS="❓ IMU : statut inconnu"
+fi
+
 # ♻️ Menu principal
 while true; do
   [[ "$DEBUG" -ne 1 ]] && clear && cat <<'BANNER'
@@ -106,6 +120,7 @@ BANNER
   echo "État système   : $SYSTEM_STATUS"
   echo "État Installer : $INSTALLER_STATUS"
   afficher_infos_gps_rtk
+  echo "$IMU_STATUS"
   echo
 
   echo "===== INSTALLATION & CONFIGURATION ====="
